@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Selector de Fotos — Telesecundaria 527 2026</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+body { background: #f0f4f8; }
+
+/* Step flow */
+.steps-bar {
+  display: flex; justify-content: center; gap: 0;
+  background: #fff; padding: 0; border-bottom: 2px solid #e8e8e8;
+}
+.step-btn {
+  flex: 1; max-width: 180px;
+  padding: 14px 8px; text-align: center;
+  font-size: .82rem; font-weight: 600; color: #999;
+  border: none; background: none; cursor: default;
+  border-bottom: 3px solid transparent;
+  transition: all .2s;
+}
+.step-btn.active { color: var(--primary); border-bottom-color: var(--secondary); }
+.step-btn.done   { color: var(--accent); }
+
+/* Panel */
+.panel { display: none; padding: 30px 20px; max-width: 700px; margin: 0 auto; }
+.panel.visible { display: block; }
+
+/* Form */
+.form-group { margin-bottom: 18px; }
+.form-group label { display: block; font-weight: 600; margin-bottom: 6px; color: var(--primary); font-size: .9rem; }
+.form-group input, .form-group select {
+  width: 100%; padding: 12px 14px;
+  border: 2px solid #e0e0e0; border-radius: 8px;
+  font-size: 1rem; transition: border .2s; background: #fff;
+}
+.form-group input:focus, .form-group select:focus {
+  outline: none; border-color: var(--accent);
+}
+.btn-primary {
+  background: var(--primary); color: #fff;
+  border: none; padding: 13px 32px; border-radius: 25px;
+  font-size: 1rem; font-weight: 700; cursor: pointer;
+  width: 100%; transition: background .2s;
+}
+.btn-primary:hover { background: var(--accent); }
+.btn-gold {
+  background: var(--secondary); color: var(--dark);
+  border: none; padding: 13px 32px; border-radius: 25px;
+  font-size: 1rem; font-weight: 700; cursor: pointer;
+  width: 100%; transition: opacity .2s;
+}
+.btn-gold:hover { opacity: .88; }
+
+/* Photo grid */
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+  margin-top: 20px;
+}
+.photo-thumb {
+  position: relative; cursor: pointer; border-radius: 8px;
+  overflow: hidden; border: 3px solid transparent;
+  transition: border .2s, transform .15s;
+  background: #ddd;
+}
+.photo-thumb:hover { transform: scale(1.03); }
+.photo-thumb.selected { border-color: var(--secondary); }
+.photo-thumb img { width: 100%; height: 160px; object-fit: cover; display: block; }
+.photo-thumb .check {
+  position: absolute; top: 6px; right: 6px;
+  width: 26px; height: 26px; border-radius: 50%;
+  background: var(--secondary); color: var(--dark);
+  font-size: 1rem; display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity .2s;
+  font-weight: 900;
+}
+.photo-thumb.selected .check { opacity: 1; }
+.photo-num {
+  position: absolute; bottom: 4px; left: 6px;
+  background: rgba(0,0,0,.55); color: #fff;
+  font-size: .7rem; padding: 2px 7px; border-radius: 8px;
+}
+
+/* Selection summary */
+.selection-bar {
+  position: sticky; bottom: 0; z-index: 50;
+  background: var(--primary); color: #fff;
+  padding: 12px 20px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  box-shadow: 0 -4px 16px rgba(0,0,0,.2);
+}
+.selection-bar span { flex: 1; font-size: .9rem; }
+.selection-bar button {
+  background: var(--secondary); color: var(--dark);
+  border: none; padding: 9px 24px; border-radius: 20px;
+  font-weight: 700; cursor: pointer; font-size: .9rem;
+}
+
+/* Summary step */
+.summary-item {
+  background: #fff; border-radius: 10px; padding: 16px 20px;
+  margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,.06);
+  display: flex; align-items: center; gap: 14px;
+}
+.summary-item img { width: 70px; height: 70px; object-fit: cover; border-radius: 6px; }
+.summary-item .name { font-size: .85rem; color: #555; }
+
+/* Package selection */
+.pkg-select {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap: 14px; margin: 20px 0;
+}
+.pkg-opt {
+  border: 2px solid #e0e0e0; border-radius: 10px; padding: 18px;
+  cursor: pointer; transition: border .2s, background .2s;
+}
+.pkg-opt:hover { border-color: var(--accent); }
+.pkg-opt.selected { border-color: var(--secondary); background: rgba(201,168,76,.08); }
+.pkg-opt h4 { color: var(--primary); font-size: .95rem; }
+.pkg-opt .price { font-size: 1.4rem; font-weight: 800; color: var(--accent); }
+.pkg-opt p { font-size: .8rem; color: #666; margin-top: 6px; }
+
+/* Success */
+.success-box {
+  text-align: center; background: #fff; border-radius: 16px;
+  padding: 40px 24px; box-shadow: 0 4px 20px rgba(0,0,0,.08);
+  margin-top: 20px;
+}
+.success-box .icon { font-size: 3.5rem; }
+.success-box h2 { color: var(--primary); margin: 16px 0 8px; }
+.success-box p { color: #666; }
+
+/* Loading overlay */
+.loading { text-align: center; padding: 50px 20px; color: #666; }
+.spinner {
+  width: 40px; height: 40px; border: 4px solid #e0e0e0;
+  border-top-color: var(--accent); border-radius: 50%;
+  animation: spin .8s linear infinite; margin: 0 auto 16px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Alert */
+.alert {
+  padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-size: .9rem;
+}
+.alert-error { background: #fee2e2; color: #991b1b; border-left: 4px solid #ef4444; }
+.alert-info  { background: #dbeafe; color: #1e40af; border-left: 4px solid #3b82f6; }
+</style>
+</head>
+<body>
+
+<nav class="nav-bar">
+  <a href="index.html">← Inicio</a>
+  <a href="selector.html" class="active">📸 Selector de Fotos</a>
+</nav>
+
+<!-- Step bar -->
+<div class="steps-bar">
+  <button class="step-btn active" id="sBtn1">1. Identificación</button>
+  <button class="step-btn" id="sBtn2">2. Elegir Fotos</button>
+  <button class="step-btn" id="sBtn3">3. Paquete</button>
+  <button class="step-btn" id="sBtn4">4. Confirmar</button>
+</div>
+
+<!-- Panel 1: Identificación -->
+<div class="panel visible" id="panel1">
+  <h2 class="section-title" style="text-align:left;">Tus datos</h2>
+  <p style="color:#666;margin-bottom:24px;font-size:.9rem;">Ingresa tus datos para ver las fotos de tu sesión.</p>
+
+  <div id="loginAlert"></div>
+
+  <div class="form-group">
+    <label>Nombre completo del alumno</label>
+    <input type="text" id="alumnoNombre" placeholder="Ej. María García López" autocomplete="name">
+  </div>
+  <div class="form-group">
+    <label>Grado</label>
+    <select id="alumnoGrado">
+      <option value="">-- Selecciona grado --</option>
+      <option value="6A">6° A</option>
+      <option value="6B">6° B</option>
+      <option value="6C">6° C</option>
+    </select>
+  </div>
+  <div class="form-group">
+    <label>Teléfono (para envío de confirmación)</label>
+    <input type="tel" id="alumnoTel" placeholder="477 000 0000">
+  </div>
+
+  <button class="btn-primary" onclick="goToPhotos()">Ver mis fotos →</button>
+</div>
+
+<!-- Panel 2: Selección de fotos -->
+<div class="panel" id="panel2">
+  <h2 class="section-title" style="text-align:left;margin-bottom:4px;">Elige tus fotos</h2>
+  <p style="color:#666;margin-bottom:8px;font-size:.9rem;">Toca las fotos que deseas imprimir. Puedes seleccionar varias.</p>
+  <div id="photoAlert"></div>
+
+  <div id="photoGrid" class="photo-grid">
+    <div class="loading">
+      <div class="spinner"></div>
+      <p>Cargando fotos...</p>
+    </div>
+  </div>
+
+  <div class="selection-bar" id="selBar" style="display:none;">
+    <span id="selCount">0 fotos seleccionadas</span>
+    <button onclick="goToPkg()">Continuar →</button>
+  </div>
+</div>
+
+<!-- Panel 3: Paquete -->
+<div class="panel" id="panel3">
+  <h2 class="section-title" style="text-align:left;">Elige tu paquete</h2>
+  <p style="color:#666;margin-bottom:8px;font-size:.9rem;">Selecciona el paquete que deseas contratar.</p>
+
+  <div class="pkg-select" id="pkgSelect">
+    <div class="pkg-opt" data-pkg="basico" data-price="200" onclick="selectPkg(this)">
+      <h4>Paquete Básico</h4>
+      <div class="price">$200</div>
+      <p>Foto individual 5×7 + foto de grupo 6×8, con marco</p>
+    </div>
+    <div class="pkg-opt" data-pkg="completo" data-price="280" onclick="selectPkg(this)">
+      <h4>Paquete Completo</h4>
+      <div class="price">$280</div>
+      <p>Básico + fotos del día de graduación con padrino/maestro</p>
+    </div>
+    <div class="pkg-opt" data-pkg="usb" data-price="100" onclick="selectPkg(this)">
+      <h4>+ Memoria USB</h4>
+      <div class="price">$100</div>
+      <p>Película editada, fotos digitales y tomas con dron</p>
+    </div>
+  </div>
+
+  <div id="extrasSection" style="margin-top:16px;">
+    <label style="display:flex;align-items:center;gap:10px;font-size:.9rem;cursor:pointer;">
+      <input type="checkbox" id="addUsb" style="width:18px;height:18px;">
+      Agregar Memoria USB (+$100)
+    </label>
+  </div>
+
+  <div style="background:#f0f4f8;border-radius:10px;padding:16px;margin:20px 0;">
+    <p style="font-size:.9rem;color:#555;">Total estimado: <strong id="totalPrice" style="font-size:1.3rem;color:var(--primary);">$0</strong></p>
+    <p style="font-size:.78rem;color:#888;margin-top:4px;">El pago se realiza directamente con el fotógrafo.</p>
+  </div>
+
+  <div style="display:flex;gap:10px;">
+    <button class="btn-primary" style="background:#888;" onclick="goToPanel(2)">← Regresar</button>
+    <button class="btn-gold" onclick="goToConfirm()">Confirmar selección →</button>
+  </div>
+</div>
+
+<!-- Panel 4: Confirmación -->
+<div class="panel" id="panel4">
+  <h2 class="section-title" style="text-align:left;">Confirma tu pedido</h2>
+
+  <div id="summaryContent"></div>
+
+  <div style="margin-top:20px;">
+    <button class="btn-gold" id="btnEnviar" onclick="enviarSeleccion()">✅ Enviar selección</button>
+  </div>
+</div>
+
+<!-- Panel 5: Éxito -->
+<div class="panel" id="panel5">
+  <div class="success-box">
+    <div class="icon">🎓✅</div>
+    <h2>¡Selección enviada!</h2>
+    <p style="margin-top:10px;">Gracias, <strong id="successNombre"></strong>.</p>
+    <p style="margin-top:8px;">Hemos registrado tus fotos seleccionadas y tu paquete. Nos pondremos en contacto para coordinar el pago y la entrega.</p>
+    <p style="margin-top:16px;font-size:.9rem;color:#888;">📱 477-920-3776 — Producciones Foro 7</p>
+    <a href="index.html" style="display:inline-block;margin-top:24px;background:var(--primary);color:#fff;padding:12px 28px;border-radius:25px;text-decoration:none;font-weight:700;">← Volver al inicio</a>
+  </div>
+</div>
+
+<script>
+// ── Estado global ──
+var state = {
+  nombre: '', grado: '', tel: '',
+  selectedPhotos: [],
+  pkg: '', usbExtra: false,
+  totalPrice: 0
+};
+
+var SUPABASE_URL = 'https://nzpujmlienzfetqcgsxz.supabase.co';
+var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im56cHVqbWxpZW56ZmV0cWNnc3h6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2ODYzMzYsImV4cCI6MjA5MDI2MjMzNn0.xl3lsb-KYj5tVLKTnzpbsdEGoV9ySnswH4eyRuyEH1s';
+var EVENTO_SLUG = 'graduacion-telesecundaria-527-2026';
+
+// ── Navegación ──
+function goToPanel(n) {
+  for (var i = 1; i <= 5; i++) {
+    document.getElementById('panel'+i).classList.toggle('visible', i === n);
+    var btn = document.getElementById('sBtn'+i);
+    if (btn) {
+      btn.classList.toggle('active', i === n);
+      btn.classList.toggle('done', i < n);
+    }
+  }
+  window.scrollTo(0, 0);
+}
+
+// ── Panel 1 → 2 ──
+function goToPhotos() {
+  state.nombre = document.getElementById('alumnoNombre').value.trim();
+  state.grado  = document.getElementById('alumnoGrado').value;
+  state.tel    = document.getElementById('alumnoTel').value.trim();
+
+  var alert = document.getElementById('loginAlert');
+  if (!state.nombre || !state.grado) {
+    alert.innerHTML = '<div class="alert alert-error">Por favor ingresa tu nombre y grado.</div>';
+    return;
+  }
+  alert.innerHTML = '';
+  goToPanel(2);
+  loadPhotos();
+}
+
+// ── Cargar fotos desde img/ ──
+function loadPhotos() {
+  var grid = document.getElementById('photoGrid');
+  // Las fotos se cargan de img/ — se listan desde photo_list.js o estáticas
+  // Por ahora se usa la lista generada; cuando haya fotos reales se regenera
+  if (typeof PHOTO_LIST === 'undefined' || PHOTO_LIST.length === 0) {
+    grid.innerHTML = '<div class="alert alert-info" style="grid-column:1/-1;">Las fotos de la sesión aún no están disponibles. Regresa pronto.</div>';
+    return;
+  }
+  renderPhotos(PHOTO_LIST);
+}
+
+function renderPhotos(list) {
+  var grid = document.getElementById('photoGrid');
+  grid.innerHTML = '';
+  list.forEach(function(foto, i) {
+    var div = document.createElement('div');
+    div.className = 'photo-thumb';
+    div.dataset.idx = i;
+    div.dataset.src = foto;
+    div.innerHTML =
+      '<img src="img/' + foto + '" loading="lazy" alt="Foto ' + (i+1) + '">' +
+      '<div class="check">✓</div>' +
+      '<div class="photo-num">' + (i+1) + '</div>';
+    div.addEventListener('click', function() { togglePhoto(this); });
+    grid.appendChild(div);
+  });
+  updateSelBar();
+}
+
+function togglePhoto(el) {
+  el.classList.toggle('selected');
+  updateSelBar();
+}
+
+function updateSelBar() {
+  var sel = document.querySelectorAll('.photo-thumb.selected');
+  state.selectedPhotos = Array.from(sel).map(function(e) { return e.dataset.src; });
+  var bar = document.getElementById('selBar');
+  var count = document.getElementById('selCount');
+  bar.style.display = sel.length > 0 ? 'flex' : 'none';
+  count.textContent = sel.length + ' foto' + (sel.length !== 1 ? 's' : '') + ' seleccionada' + (sel.length !== 1 ? 's' : '');
+}
+
+// ── Panel 2 → 3 ──
+function goToPkg() {
+  if (state.selectedPhotos.length === 0) {
+    document.getElementById('photoAlert').innerHTML =
+      '<div class="alert alert-error">Selecciona al menos una foto.</div>';
+    return;
+  }
+  document.getElementById('photoAlert').innerHTML = '';
+  goToPanel(3);
+}
+
+// ── Paquete ──
+function selectPkg(el) {
+  document.querySelectorAll('.pkg-opt').forEach(function(e) { e.classList.remove('selected'); });
+  el.classList.add('selected');
+  state.pkg = el.dataset.pkg;
+  calcTotal();
+}
+
+document.getElementById('addUsb').addEventListener('change', function() {
+  state.usbExtra = this.checked;
+  calcTotal();
+});
+
+function calcTotal() {
+  var base = 0;
+  var opts = document.querySelectorAll('.pkg-opt.selected');
+  opts.forEach(function(e) { base += parseInt(e.dataset.price); });
+  if (state.usbExtra && state.pkg !== 'usb') base += 100;
+  // extras fotos individuales
+  var extras = Math.max(0, state.selectedPhotos.length - 2);
+  base += extras * 20;
+  state.totalPrice = base;
+  document.getElementById('totalPrice').textContent = '$' + base;
+}
+
+// ── Panel 3 → 4 ──
+function goToConfirm() {
+  if (!state.pkg) {
+    alert('Por favor selecciona un paquete.');
+    return;
+  }
+  var pkg = document.querySelector('.pkg-opt.selected');
+  var pkgNombre = pkg ? pkg.querySelector('h4').textContent : state.pkg;
+  var html = '<div style="background:#fff;border-radius:12px;padding:20px;box-shadow:0 2px 10px rgba(0,0,0,.07);margin-bottom:16px;">' +
+    '<p><strong>Alumno:</strong> ' + state.nombre + '</p>' +
+    '<p><strong>Grado:</strong> ' + state.grado + '</p>' +
+    '<p><strong>Tel:</strong> ' + (state.tel || '—') + '</p>' +
+    '<p><strong>Paquete:</strong> ' + pkgNombre + '</p>' +
+    (state.usbExtra && state.pkg !== 'usb' ? '<p>+ Memoria USB</p>' : '') +
+    '<p><strong>Total estimado:</strong> $' + state.totalPrice + '</p>' +
+    '</div>' +
+    '<p style="font-size:.9rem;color:#555;margin-bottom:16px;"><strong>' + state.selectedPhotos.length + ' foto(s) seleccionada(s):</strong></p>' +
+    '<div style="display:flex;flex-wrap:wrap;gap:8px;">' +
+    state.selectedPhotos.map(function(s) {
+      return '<img src="img/'+s+'" style="width:70px;height:70px;object-fit:cover;border-radius:6px;">';
+    }).join('') +
+    '</div>';
+  document.getElementById('summaryContent').innerHTML = html;
+  goToPanel(4);
+}
+
+// ── Enviar ──
+function enviarSeleccion() {
+  var btn = document.getElementById('btnEnviar');
+  btn.disabled = true;
+  btn.textContent = 'Enviando...';
+
+  var body = JSON.stringify({
+    evento_slug: EVENTO_SLUG,
+    alumno: state.nombre,
+    grado: state.grado,
+    telefono: state.tel,
+    paquete: state.pkg,
+    usb_extra: state.usbExtra,
+    total: state.totalPrice,
+    fotos: state.selectedPhotos,
+    fecha: new Date().toISOString()
+  });
+
+  fetch(SUPABASE_URL + '/rest/v1/selecciones_escuela', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'Prefer': 'return=minimal'
+    },
+    body: body
+  }).then(function(r) {
+    document.getElementById('successNombre').textContent = state.nombre;
+    goToPanel(5);
+  }).catch(function() {
+    btn.disabled = false;
+    btn.textContent = '✅ Enviar selección';
+    alert('Error al enviar. Intenta de nuevo o contáctanos por WhatsApp.');
+  });
+}
+</script>
+<script src="js/photo_list.js"></script>
+</body>
+</html>

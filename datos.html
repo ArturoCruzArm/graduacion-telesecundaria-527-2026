@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Datos — Telesecundaria 527 Graduación 2026</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+body { background: #f0f4f8; font-family: 'Segoe UI', sans-serif; }
+
+/* ── Tabs principales ── */
+.main-tabs { display:flex; background:#fff; border-bottom:2px solid #e0e0e0; overflow-x:auto; }
+.main-tab { padding:14px 22px; border:none; background:none; cursor:pointer; font-size:.9rem; font-weight:600; color:#888; white-space:nowrap; border-bottom:3px solid transparent; transition:all .2s; }
+.main-tab.active { color:var(--primary); border-bottom-color:var(--secondary); }
+
+/* ── Sección ── */
+.tab-panel { display:none; padding:22px; max-width:960px; margin:0 auto; }
+.tab-panel.active { display:block; }
+
+/* ── Tarjetas de formulario ── */
+.form-card { background:#fff; border-radius:12px; padding:22px; margin-bottom:18px; box-shadow:0 2px 12px rgba(0,0,0,.07); }
+.form-card h3 { color:var(--primary); font-size:1rem; margin-bottom:16px; padding-bottom:8px; border-bottom:2px solid var(--secondary); }
+.field-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px; }
+.field-group label { display:block; font-size:.78rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#888; margin-bottom:5px; }
+.field-group input, .field-group select, .field-group textarea {
+  width:100%; padding:9px 12px; border:2px solid #e8e8e8;
+  border-radius:8px; font-size:.9rem; transition:border .2s; background:#fafafa;
+}
+.field-group input:focus, .field-group select:focus, .field-group textarea:focus {
+  outline:none; border-color:var(--accent); background:#fff;
+}
+.field-group textarea { min-height:70px; resize:vertical; }
+.btn-save { background:var(--primary); color:#fff; border:none; padding:11px 28px; border-radius:22px; font-weight:700; cursor:pointer; font-size:.9rem; transition:background .2s; }
+.btn-save:hover { background:var(--accent); }
+.save-row { margin-top:18px; display:flex; align-items:center; gap:14px; }
+.save-ok { color:#27ae60; font-size:.85rem; display:none; }
+
+/* ── Stats ── */
+.stats-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:12px; margin-bottom:20px; }
+.stat-box { background:#fff; border-radius:10px; padding:16px; text-align:center; box-shadow:0 2px 8px rgba(0,0,0,.06); border-top:3px solid var(--secondary); }
+.stat-box .num { font-size:1.8rem; font-weight:800; color:var(--primary); }
+.stat-box .lbl { font-size:.72rem; text-transform:uppercase; letter-spacing:.06em; color:#888; margin-top:3px; }
+
+/* ── Tabla alumnos ── */
+.tbl-wrap { overflow-x:auto; }
+table { width:100%; border-collapse:collapse; background:#fff; border-radius:10px; overflow:hidden; box-shadow:0 2px 10px rgba(0,0,0,.06); font-size:.85rem; }
+th { background:var(--primary); color:#fff; padding:10px 12px; text-align:left; font-size:.78rem; letter-spacing:.04em; text-transform:uppercase; }
+td { padding:9px 12px; border-bottom:1px solid #f0f0f0; vertical-align:middle; }
+tr:last-child td { border:none; }
+tr:hover td { background:#f7f9fc; }
+td input, td select { border:none; background:transparent; font-size:.85rem; width:100%; }
+td input:focus, td select:focus { outline:2px solid var(--accent); border-radius:4px; background:#fff; padding:2px 6px; }
+.bpag { padding:3px 9px; border-radius:8px; font-size:.72rem; font-weight:700; }
+.bpag.ok   { background:#d1fae5; color:#065f46; }
+.bpag.par  { background:#fef3c7; color:#92400e; }
+.bpag.no   { background:#fee2e2; color:#991b1b; }
+.tot-row td { background:#f0f4f8; font-weight:700; }
+
+/* ── Acciones bar ── */
+.act-bar { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:14px; }
+.act-bar input[type=text] { flex:1; min-width:150px; padding:8px 14px; border:2px solid #e0e0e0; border-radius:20px; font-size:.85rem; }
+.act-bar select { padding:8px 12px; border:2px solid #e0e0e0; border-radius:20px; font-size:.85rem; background:#fff; }
+.btn-sm { padding:8px 16px; border-radius:18px; border:none; cursor:pointer; font-size:.82rem; font-weight:600; }
+.btn-add { background:var(--primary); color:#fff; }
+.btn-csv { background:#27ae60; color:#fff; }
+
+/* ── Modal ── */
+.modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:200; align-items:center; justify-content:center; }
+.modal.open { display:flex; }
+.modal-box { background:#fff; border-radius:14px; padding:28px; width:min(96vw,480px); max-height:90vh; overflow-y:auto; }
+.modal-box h3 { color:var(--primary); margin-bottom:18px; }
+.mb-field { margin-bottom:12px; }
+.mb-field label { display:block; font-size:.8rem; font-weight:700; color:#666; margin-bottom:4px; }
+.mb-field input, .mb-field select { width:100%; padding:9px 12px; border:2px solid #e0e0e0; border-radius:8px; font-size:.9rem; }
+.mb-btns { display:flex; gap:10px; margin-top:18px; }
+.mb-btns button { flex:1; padding:11px; border-radius:8px; border:none; cursor:pointer; font-weight:700; font-size:.9rem; }
+
+/* ── Pendientes ── */
+.pend-list { list-style:none; }
+.pend-list li { display:flex; align-items:center; gap:10px; padding:10px 14px; background:#fff; border-radius:8px; margin-bottom:8px; box-shadow:0 2px 6px rgba(0,0,0,.05); font-size:.9rem; }
+.pend-list li .dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.dot-red { background:#e74c3c; }
+.dot-yellow { background:#f39c12; }
+.dot-green { background:#27ae60; }
+</style>
+</head>
+<body>
+
+<nav class="nav-bar">
+  <a href="index.html">Inicio</a>
+  <a href="selector.html">Selector</a>
+  <a href="contrato.html">Contrato</a>
+  <a href="logistica.html">Logística</a>
+  <a href="datos.html" class="active">Datos</a>
+  <a href="invitados.html">Invitados</a>
+</nav>
+
+<div class="page-header">
+  <div><h1>📊 Datos del Evento</h1><p style="opacity:.7;font-size:.82rem;">Telesecundaria 527 · Graduación 2026</p></div>
+  <span class="badge">Admin</span>
+</div>
+
+<!-- Tabs -->
+<div class="main-tabs">
+  <button class="main-tab active" onclick="showTab('escuela')">🏫 Escuela</button>
+  <button class="main-tab" onclick="showTab('evento')">📅 Evento</button>
+  <button class="main-tab" onclick="showTab('sesion')">📷 Sesión</button>
+  <button class="main-tab" onclick="showTab('alumnos')">👩‍🎓 Alumnos</button>
+  <button class="main-tab" onclick="showTab('pendientes')">⚠️ Pendientes</button>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- TAB: ESCUELA -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="tab-panel active" id="tab-escuela">
+
+  <div class="form-card">
+    <h3>🏫 Datos de la Escuela</h3>
+    <div class="field-grid">
+      <div class="field-group"><label>Nombre</label><input id="esc-nombre" value="Telesecundaria 527"></div>
+      <div class="field-group"><label>CCT</label><input id="esc-cct" value="11ETV0549O"></div>
+      <div class="field-group"><label>Turno</label><input id="esc-turno" value="Matutino"></div>
+      <div class="field-group"><label>Zona</label><input id="esc-zona" value="Rural"></div>
+    </div>
+    <div class="field-grid" style="margin-top:12px;">
+      <div class="field-group" style="grid-column:1/-1"><label>Dirección</label><input id="esc-dir" value="Calle los Arcos, Los Arcos, León, Gto. CP. 37689"></div>
+    </div>
+  </div>
+
+  <div class="form-card">
+    <h3>📞 Contacto en la Escuela</h3>
+    <div class="field-grid">
+      <div class="field-group"><label>Nombre del contacto</label><input id="esc-contacto-nombre" value="Por confirmar"></div>
+      <div class="field-group"><label>Teléfono</label><input id="esc-contacto-tel" value="Por confirmar"></div>
+      <div class="field-group"><label>Cargo</label><input id="esc-contacto-cargo" placeholder="Ej. Maestra, Directora..."></div>
+    </div>
+  </div>
+
+  <div class="form-card">
+    <h3>📚 Estructura Escolar — ¿Quiénes participan?</h3>
+    <div class="field-grid">
+      <div class="field-group">
+        <label>¿Cuántos grados quieren fotos?</label>
+        <input id="esc-num-grados" type="number" min="1" placeholder="Ej. 6 (todos los grados)">
+      </div>
+      <div class="field-group">
+        <label>Grupos por grado</label>
+        <input id="esc-grupos-grado" type="number" min="1" value="1" placeholder="Ej. 1">
+      </div>
+      <div class="field-group">
+        <label>Promedio de alumnos por grupo</label>
+        <input id="esc-alumnos-grupo" type="number" min="1" placeholder="Ej. 25">
+      </div>
+      <div class="field-group">
+        <label>Total estimado de alumnos</label>
+        <input id="esc-total-alumnos" type="number" placeholder="Se calcula automático" readonly style="background:#f0f0f0;">
+      </div>
+    </div>
+    <div class="field-grid" style="margin-top:12px;">
+      <div class="field-group" style="grid-column:1/-1">
+        <label>¿Qué grados participan? (lista)</label>
+        <input id="esc-grados-lista" placeholder="Ej. 1°, 2°, 3°, 4°, 5°, 6°  — o solo  6°">
+      </div>
+    </div>
+    <div class="field-grid" style="margin-top:12px;">
+      <div class="field-group" style="grid-column:1/-1">
+        <label>Notas adicionales sobre la estructura</label>
+        <textarea id="esc-notas" placeholder="Ej. Solo el 6° grado quiere fotos, hay un grupo A y un grupo B..."></textarea>
+      </div>
+    </div>
+    <div class="save-row">
+      <button class="btn-save" onclick="saveSeccion('escuela')">💾 Guardar datos de escuela</button>
+      <span class="save-ok" id="ok-escuela">✓ Guardado</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- TAB: EVENTO (GRADUACIÓN) -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="tab-panel" id="tab-evento">
+
+  <div class="form-card">
+    <h3>⛪ Misa de Graduación</h3>
+    <div class="field-grid">
+      <div class="field-group"><label>Fecha</label><input id="cer-fecha" placeholder="Ej. Sábado 20 de Junio de 2026"></div>
+      <div class="field-group"><label>Hora</label><input id="cer-hora" placeholder="Ej. 5:00 PM"></div>
+      <div class="field-group"><label>Templo / Iglesia</label><input id="cer-lugar" placeholder="Nombre del templo"></div>
+      <div class="field-group"><label>Dirección</label><input id="cer-dir" placeholder="Calle, colonia, municipio"></div>
+      <div class="field-group"><label>Link Google Maps</label><input id="cer-maps" placeholder="https://maps.app.goo.gl/..."></div>
+    </div>
+    <div class="save-row">
+      <button class="btn-save" onclick="saveSeccion('ceremonia')">💾 Guardar misa</button>
+      <span class="save-ok" id="ok-ceremonia">✓ Guardado</span>
+    </div>
+  </div>
+
+  <div class="form-card">
+    <h3>🎉 Ceremonia y Fiesta / Salón</h3>
+    <div class="field-grid">
+      <div class="field-group"><label>Hora inicio</label><input id="rec-hora" placeholder="Ej. 7:00 PM"></div>
+      <div class="field-group"><label>Hora fin</label><input id="rec-hora-fin" placeholder="Ej. 11:00 PM"></div>
+      <div class="field-group"><label>Nombre del salón</label><input id="rec-lugar" placeholder="Nombre del salón o lugar"></div>
+      <div class="field-group"><label>Dirección</label><input id="rec-dir" placeholder="Calle, colonia, municipio"></div>
+      <div class="field-group"><label>Link Google Maps</label><input id="rec-maps" placeholder="https://maps.app.goo.gl/..."></div>
+    </div>
+    <div class="field-group" style="margin-top:12px;">
+      <label>Itinerario de la ceremonia (bailes, protocolos, horarios)</label>
+      <textarea id="rec-itinerario" placeholder="Ej. 7:00 Entrada de alumnos · 7:30 Vals · 8:00 Entrega de diplomas..."></textarea>
+    </div>
+    <div class="save-row">
+      <button class="btn-save" onclick="saveSeccion('recepcion')">💾 Guardar salón/fiesta</button>
+      <span class="save-ok" id="ok-recepcion">✓ Guardado</span>
+    </div>
+  </div>
+
+  <div class="form-card">
+    <h3>✍️ Frase para la Invitación</h3>
+    <div class="field-group">
+      <label>Frase personalizada (aparece en la invitación pública)</label>
+      <textarea id="inv-frase" placeholder="Ej. El futuro pertenece a quienes creen en la belleza de sus sueños."></textarea>
+    </div>
+    <div class="save-row">
+      <button class="btn-save" onclick="saveSeccion('invitacion_web')">💾 Guardar frase</button>
+      <span class="save-ok" id="ok-invitacion_web">✓ Guardado</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- TAB: SESIÓN FOTOGRÁFICA -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="tab-panel" id="tab-sesion">
+
+  <div class="form-card">
+    <h3>📷 Sesión en la Escuela</h3>
+    <div class="field-grid">
+      <div class="field-group"><label>Fecha</label><input id="ses-fecha" placeholder="Ej. Lunes 15 de Junio de 2026"></div>
+      <div class="field-group"><label>Hora de inicio</label><input id="ses-hora" placeholder="Ej. 8:00 AM"></div>
+      <div class="field-group"><label>Lugar</label><input id="ses-lugar" value="Telesecundaria 527"></div>
+    </div>
+    <div class="field-group" style="margin-top:12px;">
+      <label>Orden de grupos / horario por grado</label>
+      <textarea id="ses-orden" placeholder="Ej. 8:00 1°A · 8:30 2°A · 9:00 3°A · 9:30 4°A · 10:00 5°A · 10:30 6°A"></textarea>
+    </div>
+    <div class="field-group" style="margin-top:12px;">
+      <label>Instrucciones especiales</label>
+      <textarea id="ses-instrucciones" placeholder="Ej. Llegar 15 min antes, uniforme de gala, no es necesario llevar toga..."></textarea>
+    </div>
+    <div class="save-row">
+      <button class="btn-save" onclick="saveSeccion('sesion')">💾 Guardar sesión</button>
+      <span class="save-ok" id="ok-sesion">✓ Guardado</span>
+    </div>
+  </div>
+
+  <div class="form-card">
+    <h3>🏠 Entrega de Fotos</h3>
+    <p style="font-size:.88rem;color:#555;margin-bottom:14px;">Confirma el proceso de entrega para comunicárselo a los padres.</p>
+    <div class="field-grid">
+      <div class="field-group">
+        <label>Fotos de la sesión previa — ¿cuándo se entregan?</label>
+        <input id="ent-sesion" value="El día de la graduación" placeholder="Ej. El día de la graduación">
+      </div>
+      <div class="field-group">
+        <label>Fotos de la graduación — ¿cómo se entregan?</label>
+        <input id="ent-graduacion" value="A domicilio 7-10 días después" placeholder="Ej. A domicilio 7-10 días después">
+      </div>
+      <div class="field-group">
+        <label>Memorias USB — ¿cuándo se entregan?</label>
+        <input id="ent-usb" value="A domicilio junto con las fotos de graduación" placeholder="Ej. A domicilio junto con las fotos">
+      </div>
+    </div>
+    <div class="save-row">
+      <button class="btn-save" onclick="saveSeccion('entrega')">💾 Guardar entrega</button>
+      <span class="save-ok" id="ok-entrega">✓ Guardado</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- TAB: ALUMNOS -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="tab-panel" id="tab-alumnos">
+
+  <!-- Stats -->
+  <div class="stats-row" id="statsRow">
+    <div class="stat-box"><div class="num" id="st-total">—</div><div class="lbl">Alumnos</div></div>
+    <div class="stat-box"><div class="num" id="st-grupos">—</div><div class="lbl">Grupos</div></div>
+    <div class="stat-box" style="border-top-color:#27ae60;"><div class="num" id="st-cobrado" style="color:#27ae60;">$0</div><div class="lbl">Cobrado</div></div>
+    <div class="stat-box" style="border-top-color:#e74c3c;"><div class="num" id="st-pend" style="color:#e74c3c;">$0</div><div class="lbl">Pendiente</div></div>
+    <div class="stat-box" style="border-top-color:var(--accent);"><div class="num" id="st-ttotal" style="color:var(--accent);">$0</div><div class="lbl">Total</div></div>
+  </div>
+
+  <!-- Acciones -->
+  <div class="act-bar">
+    <input type="text" id="buscar" placeholder="🔍 Buscar alumno..." oninput="filtrar()">
+    <select id="filtGrupo" onchange="filtrar()"><option value="">Todos los grupos</option></select>
+    <select id="filtStatus" onchange="filtrar()">
+      <option value="">Todos</option>
+      <option value="ok">Pagado</option>
+      <option value="par">Parcial</option>
+      <option value="no">Pendiente</option>
+    </select>
+    <button class="btn-sm btn-add" onclick="abrirModal()">+ Alumno</button>
+    <button class="btn-sm btn-csv" onclick="exportar()">⬇ CSV</button>
+  </div>
+
+  <!-- Tabla -->
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th><th>Nombre</th><th>Grupo</th><th>Teléfono</th>
+          <th>Dirección</th><th>Paquete</th><th>Total</th>
+          <th>Anticipo</th><th>Resta</th><th>Estatus</th>
+          <th>Notas</th><th>🗑</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"><tr><td colspan="12" style="text-align:center;padding:24px;color:#999;">Cargando...</td></tr></tbody>
+      <tfoot>
+        <tr class="tot-row">
+          <td colspan="6" style="text-align:right;">TOTALES</td>
+          <td id="tot-t">$0</td><td id="tot-a">$0</td><td id="tot-r">$0</td>
+          <td colspan="3"></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════ -->
+<!-- TAB: PENDIENTES -->
+<!-- ══════════════════════════════════════════════════════ -->
+<div class="tab-panel" id="tab-pendientes">
+  <div class="form-card">
+    <h3>⚠️ Información que falta confirmar</h3>
+    <p style="font-size:.85rem;color:#666;margin-bottom:16px;">Esta lista se actualiza automáticamente según los campos vacíos en Supabase.</p>
+    <ul class="pend-list" id="pendList">
+      <li><div class="dot dot-yellow"></div>Cargando...</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Modal agregar alumno -->
+<div class="modal" id="modal">
+  <div class="modal-box">
+    <h3>➕ Agregar Alumno</h3>
+    <div class="mb-field"><label>Nombre completo</label><input id="m-nombre" placeholder="Nombre del alumno"></div>
+    <div class="mb-field"><label>Grado / Grupo</label><input id="m-grupo" placeholder="Ej. 6°A, 5°B..."></div>
+    <div class="mb-field"><label>Teléfono familiar</label><input type="tel" id="m-tel" placeholder="477 000 0000"></div>
+    <div class="mb-field"><label>Dirección de entrega</label><input id="m-dir" placeholder="Calle, número, colonia"></div>
+    <div class="mb-field">
+      <label>Paquete</label>
+      <select id="m-pkg">
+        <option value="basico">Básico — $200 (foto individual + grupo con marco)</option>
+        <option value="completo">Completo — $280 (+ fotos día de graduación)</option>
+        <option value="basico+usb">Básico + USB — $300</option>
+        <option value="completo+usb">Completo + USB — $380</option>
+      </select>
+    </div>
+    <div class="mb-field"><label>Total ($)</label><input type="number" id="m-total" placeholder="200"></div>
+    <div class="mb-field"><label>Anticipo pagado ($)</label><input type="number" id="m-anticipo" value="0"></div>
+    <div class="mb-field"><label>Notas</label><input id="m-notas" placeholder="Observaciones..."></div>
+    <div class="mb-btns">
+      <button style="background:#e0e0e0;color:#555;" onclick="cerrarModal()">Cancelar</button>
+      <button style="background:var(--primary);color:#fff;" onclick="guardarAlumno()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<footer style="margin-top:30px;">
+  <p><strong>Producciones Foro 7</strong> — 📱 477-920-3776</p>
+</footer>
+
+<script>
+var SB  = 'https://nzpujmlienzfetqcgsxz.supabase.co';
+var KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im56cHVqbWxpZW56ZmV0cWNnc3h6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2ODYzMzYsImV4cCI6MjA5MDI2MjMzNn0.xl3lsb-KYj5tVLKTnzpbsdEGoV9ySnswH4eyRuyEH1s';
+var SLUG = 'graduacion-telesecundaria-527-2026';
+var H = { 'apikey': KEY, 'Authorization': 'Bearer ' + KEY, 'Content-Type': 'application/json' };
+var EVENTO_ID = null;
+var allAlumnos = [];
+var cfg = {};
+
+// ── Tabs ──
+function showTab(id) {
+  document.querySelectorAll('.tab-panel').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelectorAll('.main-tab').forEach(function(b){ b.classList.remove('active'); });
+  document.getElementById('tab-' + id).classList.add('active');
+  event.target.classList.add('active');
+  if (id === 'alumnos') cargarAlumnos();
+  if (id === 'pendientes') mostrarPendientes();
+}
+
+// ── Cargar evento_id y config ──
+async function init() {
+  var r = await fetch(SB + '/rest/v1/eventos?slug=eq.' + SLUG + '&select=id&limit=1', { headers: H });
+  var arr = await r.json();
+  if (!arr || !arr[0]) return;
+  EVENTO_ID = arr[0].id;
+
+  var cr = await fetch(SB + '/rest/v1/eventos_config?evento_id=eq.' + EVENTO_ID + '&select=seccion,datos', { headers: H });
+  var cfgArr = await cr.json();
+  cfgArr.forEach(function(c){ cfg[c.seccion] = c.datos || {}; });
+  llenarFormularios();
+  cargarAlumnos();
+}
+
+function llenarFormularios() {
+  var e = cfg.escuela || {};
+  set('esc-nombre', e.nombre); set('esc-cct', e.cct); set('esc-turno', e.turno); set('esc-zona', e.zona);
+  set('esc-dir', e.direccion); set('esc-contacto-nombre', e.contacto_nombre); set('esc-contacto-tel', e.contacto_tel);
+  set('esc-contacto-cargo', e.contacto_cargo); set('esc-num-grados', e.num_grados);
+  set('esc-grupos-grado', e.grupos_por_grado); set('esc-alumnos-grupo', e.alumnos_por_grupo);
+  set('esc-grados-lista', e.grados_que_participan); set('esc-notas', e.notas);
+  calcTotal();
+
+  var c = cfg.ceremonia || {};
+  set('cer-fecha', c.fecha); set('cer-hora', c.hora); set('cer-lugar', c.lugar);
+  set('cer-dir', c.direccion); set('cer-maps', c.maps_url);
+
+  var rec = cfg.recepcion || {};
+  set('rec-hora', rec.hora); set('rec-hora-fin', rec.hora_fin); set('rec-lugar', rec.lugar);
+  set('rec-dir', rec.direccion); set('rec-maps', rec.maps_url); set('rec-itinerario', rec.itinerario);
+
+  var inv = cfg.invitacion_web || {};
+  set('inv-frase', inv.frase);
+
+  var s = cfg.sesion || {};
+  set('ses-fecha', s.fecha); set('ses-hora', s.hora); set('ses-lugar', s.lugar);
+  set('ses-orden', s.orden_grupos); set('ses-instrucciones', s.instrucciones);
+
+  var ent = cfg.entrega || {};
+  set('ent-sesion', ent.sesion_previa || 'El día de la graduación');
+  set('ent-graduacion', ent.graduacion || 'A domicilio 7-10 días después');
+  set('ent-usb', ent.usb || 'A domicilio junto con las fotos de graduación');
+}
+
+function set(id, val) {
+  var el = document.getElementById(id);
+  if (el && val) el.value = val;
+}
+
+// ── Calcular total automático ──
+document.getElementById('esc-num-grados').addEventListener('input', calcTotal);
+document.getElementById('esc-grupos-grado').addEventListener('input', calcTotal);
+document.getElementById('esc-alumnos-grupo').addEventListener('input', calcTotal);
+function calcTotal() {
+  var g = parseInt(document.getElementById('esc-num-grados').value) || 0;
+  var gr = parseInt(document.getElementById('esc-grupos-grado').value) || 1;
+  var a = parseInt(document.getElementById('esc-alumnos-grupo').value) || 0;
+  if (g && a) document.getElementById('esc-total-alumnos').value = g * gr * a;
+}
+
+// ── Guardar sección ──
+async function saveSeccion(seccion) {
+  if (!EVENTO_ID) { alert('Espera que carguen los datos...'); return; }
+  var datos = {};
+  if (seccion === 'escuela') {
+    datos = {
+      nombre: v('esc-nombre'), cct: v('esc-cct'), turno: v('esc-turno'), zona: v('esc-zona'),
+      direccion: v('esc-dir'), contacto_nombre: v('esc-contacto-nombre'),
+      contacto_tel: v('esc-contacto-tel'), contacto_cargo: v('esc-contacto-cargo'),
+      num_grados: v('esc-num-grados'), grupos_por_grado: v('esc-grupos-grado'),
+      alumnos_por_grupo: v('esc-alumnos-grupo'), grados_que_participan: v('esc-grados-lista'),
+      notas: v('esc-notas')
+    };
+  } else if (seccion === 'ceremonia') {
+    datos = { fecha: v('cer-fecha'), hora: v('cer-hora'), lugar: v('cer-lugar'), direccion: v('cer-dir'), maps_url: v('cer-maps') };
+  } else if (seccion === 'recepcion') {
+    datos = { hora: v('rec-hora'), hora_fin: v('rec-hora-fin'), lugar: v('rec-lugar'), direccion: v('rec-dir'), maps_url: v('rec-maps'), itinerario: v('rec-itinerario') };
+  } else if (seccion === 'invitacion_web') {
+    datos = { frase: v('inv-frase') };
+  } else if (seccion === 'sesion') {
+    datos = { fecha: v('ses-fecha'), hora: v('ses-hora'), lugar: v('ses-lugar'), orden_grupos: v('ses-orden'), instrucciones: v('ses-instrucciones') };
+  } else if (seccion === 'entrega') {
+    datos = { sesion_previa: v('ent-sesion'), graduacion: v('ent-graduacion'), usb: v('ent-usb') };
+  }
+
+  // Upsert
+  var existing = cfg[seccion];
+  var method = existing ? 'PATCH' : 'POST';
+  var url = SB + '/rest/v1/eventos_config' + (existing ? '?evento_id=eq.' + EVENTO_ID + '&seccion=eq.' + seccion : '');
+  var body = existing ? { datos: datos } : { evento_id: EVENTO_ID, seccion: seccion, datos: datos };
+
+  await fetch(url, { method: method, headers: Object.assign({}, H, { Prefer: 'return=minimal' }), body: JSON.stringify(body) });
+  cfg[seccion] = datos;
+
+  var ok = document.getElementById('ok-' + seccion);
+  if (ok) { ok.style.display = 'inline'; setTimeout(function(){ ok.style.display = 'none'; }, 2500); }
+}
+
+function v(id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; }
+
+// ── Alumnos ──
+async function cargarAlumnos() {
+  var r = await fetch(SB + '/rest/v1/alumnos_escuela?evento_slug=eq.' + SLUG + '&order=grupo,nombre', { headers: H });
+  allAlumnos = await r.json();
+  if (!Array.isArray(allAlumnos)) allAlumnos = [];
+  renderTabla(allAlumnos);
+  actualizarStats(allAlumnos);
+  llenarFiltroGrupos(allAlumnos);
+}
+
+function llenarFiltroGrupos(data) {
+  var grupos = [...new Set(data.map(function(a){ return a.grupo; }).filter(Boolean))].sort();
+  var sel = document.getElementById('filtGrupo');
+  sel.innerHTML = '<option value="">Todos los grupos</option>';
+  grupos.forEach(function(g){
+    var o = document.createElement('option'); o.value = g; o.textContent = g; sel.appendChild(o);
+  });
+}
+
+function renderTabla(data) {
+  var tbody = document.getElementById('tbody');
+  if (!data.length) {
+    tbody.innerHTML = '<tr><td colspan="12" style="text-align:center;padding:24px;color:#999;">Sin alumnos. Usa "+ Alumno" para agregar.</td></tr>';
+    actualizarTotales([]);
+    return;
+  }
+  tbody.innerHTML = data.map(function(a, i){
+    var tot = a.total || 0, ant = a.anticipo || 0, rest = tot - ant;
+    var st = ant >= tot && tot > 0 ? 'ok' : ant > 0 ? 'par' : 'no';
+    var badge = { ok:'<span class="bpag ok">✓ Pagado</span>', par:'<span class="bpag par">⏳ Parcial</span>', no:'<span class="bpag no">Pendiente</span>' }[st];
+    return '<tr data-id="'+a.id+'" data-grupo="'+(a.grupo||'')+'" data-st="'+st+'" data-nom="'+(a.nombre||'').toLowerCase()+'">' +
+      '<td style="text-align:center;font-weight:700;color:var(--primary);">'+(i+1)+'</td>' +
+      '<td><input value="'+(a.nombre||'')+'" onblur="updField(this,\'nombre\')" placeholder="Nombre"></td>' +
+      '<td>'+(a.grupo||'—')+'</td>' +
+      '<td><input value="'+(a.telefono||'')+'" onblur="updField(this,\'telefono\')" placeholder="Tel"></td>' +
+      '<td><input value="'+(a.direccion||'')+'" onblur="updField(this,\'direccion\')" placeholder="Dirección"></td>' +
+      '<td><input value="'+(a.paquete||'')+'" onblur="updField(this,\'paquete\')" placeholder="Paquete"></td>' +
+      '<td><input type="number" value="'+tot+'" onblur="updField(this,\'total\')" style="width:65px;"></td>' +
+      '<td><input type="number" value="'+ant+'" onblur="updField(this,\'anticipo\')" style="width:65px;"></td>' +
+      '<td style="color:#e74c3c;font-weight:700;">$'+rest+'</td>' +
+      '<td>'+badge+'</td>' +
+      '<td><input value="'+(a.notas||'')+'" onblur="updField(this,\'notas\')" placeholder="—" style="font-size:.8rem;"></td>' +
+      '<td><button onclick="eliminar(\''+a.id+'\')" style="background:none;border:none;cursor:pointer;color:#e74c3c;">🗑</button></td>' +
+      '</tr>';
+  }).join('');
+  actualizarTotales(data);
+}
+
+function actualizarStats(data) {
+  var grupos = new Set(data.map(function(a){ return a.grupo; }));
+  var cob = data.reduce(function(s,a){ return s+(a.anticipo||0); }, 0);
+  var tot = data.reduce(function(s,a){ return s+(a.total||0); }, 0);
+  document.getElementById('st-total').textContent  = data.length;
+  document.getElementById('st-grupos').textContent = grupos.size;
+  document.getElementById('st-cobrado').textContent = '$'+cob;
+  document.getElementById('st-pend').textContent    = '$'+(tot-cob);
+  document.getElementById('st-ttotal').textContent  = '$'+tot;
+}
+
+function actualizarTotales(data) {
+  var t=data.reduce(function(s,a){return s+(a.total||0);},0);
+  var ac=data.reduce(function(s,a){return s+(a.anticipo||0);},0);
+  document.getElementById('tot-t').textContent='$'+t;
+  document.getElementById('tot-a').textContent='$'+ac;
+  document.getElementById('tot-r').textContent='$'+(t-ac);
+}
+
+function filtrar() {
+  var q = document.getElementById('buscar').value.toLowerCase();
+  var g = document.getElementById('filtGrupo').value;
+  var s = document.getElementById('filtStatus').value;
+  document.querySelectorAll('#tbody tr[data-id]').forEach(function(r){
+    r.style.display = (!q||r.dataset.nom.includes(q)) && (!g||r.dataset.grupo===g) && (!s||r.dataset.st===s) ? '' : 'none';
+  });
+}
+
+async function updField(input, campo) {
+  var row = input.closest('tr'); var id = row.dataset.id;
+  var val = input.type==='number' ? parseFloat(input.value)||0 : input.value;
+  var body = {}; body[campo] = val;
+  await fetch(SB+'/rest/v1/alumnos_escuela?id=eq.'+id, {
+    method:'PATCH', headers:Object.assign({},H,{Prefer:'return=minimal'}), body:JSON.stringify(body)
+  });
+  cargarAlumnos();
+}
+
+async function eliminar(id) {
+  if (!confirm('¿Eliminar este alumno?')) return;
+  await fetch(SB+'/rest/v1/alumnos_escuela?id=eq.'+id, { method:'DELETE', headers:H });
+  cargarAlumnos();
+}
+
+function abrirModal() {
+  // Pre-seleccionar precio según paquete
+  document.getElementById('m-pkg').addEventListener('change', function(){
+    var prices = { basico:200, completo:280, 'basico+usb':300, 'completo+usb':380 };
+    document.getElementById('m-total').value = prices[this.value] || '';
+  });
+  document.getElementById('modal').classList.add('open');
+}
+function cerrarModal() { document.getElementById('modal').classList.remove('open'); }
+
+async function guardarAlumno() {
+  var nombre = document.getElementById('m-nombre').value.trim();
+  if (!nombre) { alert('El nombre es requerido.'); return; }
+  var prices = { basico:200, completo:280, 'basico+usb':300, 'completo+usb':380 };
+  var pkg = document.getElementById('m-pkg').value;
+  var body = {
+    evento_slug: SLUG,
+    nombre: nombre,
+    grupo:     document.getElementById('m-grupo').value.trim(),
+    telefono:  document.getElementById('m-tel').value.trim(),
+    direccion: document.getElementById('m-dir').value.trim(),
+    paquete:   pkg,
+    total:     parseFloat(document.getElementById('m-total').value) || prices[pkg] || 200,
+    anticipo:  parseFloat(document.getElementById('m-anticipo').value) || 0,
+    notas:     document.getElementById('m-notas').value.trim()
+  };
+  await fetch(SB+'/rest/v1/alumnos_escuela', {
+    method:'POST', headers:Object.assign({},H,{Prefer:'return=minimal'}), body:JSON.stringify(body)
+  });
+  cerrarModal();
+  cargarAlumnos();
+}
+
+function exportar() {
+  var filas = [['#','Nombre','Grupo','Tel','Dirección','Paquete','Total','Anticipo','Resta','Estatus']];
+  allAlumnos.forEach(function(a,i){
+    var t=a.total||0,ant=a.anticipo||0;
+    filas.push([i+1,a.nombre,a.grupo,a.telefono,a.direccion,a.paquete,t,ant,t-ant,ant>=t&&t>0?'Pagado':ant>0?'Parcial':'Pendiente']);
+  });
+  var csv = filas.map(function(r){ return r.join(','); }).join('\n');
+  var a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);
+  a.download = 'alumnos-nigromante-2026.csv';
+  a.click();
+}
+
+// ── Pendientes ──
+function mostrarPendientes() {
+  var items = [];
+  var c = cfg.ceremonia || {};
+  var r = cfg.recepcion || {};
+  var s = cfg.sesion    || {};
+  var e = cfg.escuela   || {};
+
+  function chk(condicion, texto, color) { if (condicion) items.push({ texto: texto, color: color || 'dot-red' }); }
+
+  chk(!e.num_grados,           '¿Cuántos grados participan? — no definido', 'dot-red');
+  chk(!e.grados_que_participan,'Lista de grados que participan — no definido', 'dot-yellow');
+  chk(!e.alumnos_por_grupo,    'Promedio de alumnos por grupo — no definido', 'dot-yellow');
+  chk(!s.fecha,                'Fecha de sesión fotográfica en escuela — pendiente', 'dot-red');
+  chk(!s.hora,                 'Hora de inicio de sesión fotográfica — pendiente', 'dot-red');
+  chk(!s.orden_grupos,         'Orden de grupos / horario por grado — pendiente', 'dot-yellow');
+  chk(!c.fecha,                'Fecha de graduación / misa — pendiente', 'dot-red');
+  chk(!c.hora,                 'Hora de la misa — pendiente', 'dot-red');
+  chk(!c.lugar,                'Templo para la misa — pendiente', 'dot-red');
+  chk(!c.direccion,            'Dirección del templo — pendiente', 'dot-yellow');
+  chk(!r.lugar,                'Salón de la fiesta — pendiente', 'dot-red');
+  chk(!r.hora,                 'Hora inicio de la fiesta — pendiente', 'dot-red');
+  chk(!r.itinerario,           'Itinerario completo de la ceremonia — pendiente', 'dot-yellow');
+
+  if (!items.length) items.push({ texto: '✅ Todo está completo — nada pendiente', color: 'dot-green' });
+
+  document.getElementById('pendList').innerHTML = items.map(function(it){
+    return '<li><div class="dot '+it.color+'"></div>' + it.texto + '</li>';
+  }).join('');
+}
+
+// ── Init ──
+init();
+</script>
+</body>
+</html>
