@@ -162,13 +162,28 @@ body.splash-active > *:not(#splash) { visibility: hidden; }
 </header>
 
 <div class="school-info-bar">
-  CCT: 11ETV0549O &nbsp;|&nbsp; Turno Matutino &nbsp;|&nbsp; Calle los Arcos, Los Arcos, León, Gto. C
+  CCT: 11ETV0549O &nbsp;|&nbsp; Turno Matutino &nbsp;|&nbsp; Camino a los Tepetates #4, Los Arcos, León, Gto.
 </div>
 
 <!-- Motto -->
 <div class="motto" data-campo="invitacion-frase">
   "El futuro pertenece a quienes creen en la belleza de sus sueños."
 </div>
+
+<!-- Director y Maestros -->
+<section class="section">
+  <div class="container">
+    <h2 class="section-title">Autoridades Educativas</h2>
+    <div class="section-line"></div>
+    <div style="text-align:center;max-width:600px;margin:0 auto;">
+      <p style="margin-bottom:18px;"><strong style="font-size:1.05rem;">Director</strong><br>Luis Gerardo Wong Palacios</p>
+      <p style="margin-bottom:8px;"><strong>Maestros Titulares</strong></p>
+      <p>3°A — Yadira Gutiérrez Hernández</p>
+      <p>3°B — Rigoberto Islas Ramírez</p>
+      <p>3°C — Enrique Oláes Gallardo</p>
+    </div>
+  </div>
+</section>
 
 <!-- Protocolo -->
 <section class="section">
@@ -180,19 +195,19 @@ body.splash-active > *:not(#splash) { visibility: hidden; }
 
       <div class="tl-item">
         <div class="tl-dot"></div>
-        <span class="tl-badge" data-campo="ceremonia-fecha">Día de la Graduación</span>
-        <div class="tl-title">⛪ Misa de Graduación</div>
-        <p class="tl-sub"><strong data-campo="ceremonia-hora">Por confirmar</strong> — <span data-campo="ceremonia-lugar">Templo por confirmar</span></p>
-        <p class="tl-sub" data-campo="ceremonia-direccion">Dirección por confirmar</p>
+        <span class="tl-badge">Miércoles 9 de Julio 2026</span>
+        <div class="tl-title">🎓 Ceremonia de Graduación</div>
+        <p class="tl-sub"><strong>8:00 AM</strong> — Telesecundaria 527</p>
+        <p class="tl-sub">Camino a los Tepetates #4, Los Arcos, León, Gto.</p>
+        <p class="tl-sub" style="margin-top:6px;">Entrega de diplomas digitales, bailes, protocolo y celebración. Habrá tomas con dron de los lugares y video de todos los bailes y protocolos.</p>
       </div>
 
       <div class="tl-item">
         <div class="tl-dot"></div>
-        <span class="tl-badge">Día de la Graduación</span>
-        <div class="tl-title">🎉 Ceremonia y Fiesta</div>
-        <p class="tl-sub"><strong data-campo="recepcion-hora">Por confirmar</strong> — <span data-campo="recepcion-lugar">Salón por confirmar</span></p>
-        <p class="tl-sub" data-campo="recepcion-direccion">Dirección por confirmar</p>
-        <p class="tl-sub" style="margin-top:6px;">Entrega de diplomas digitales, bailes, protocolo y celebración. Habrá tomas con dron de los lugares y video de todos los bailes y protocolos.</p>
+        <span class="tl-badge">Miércoles 9 de Julio 2026</span>
+        <div class="tl-title">⛪ Misa de Graduación</div>
+        <p class="tl-sub"><strong>11:00 AM</strong> — Iglesia de San José de los Arcos</p>
+        <p class="tl-sub">Dirección por confirmar</p>
       </div>
 
     </div>
@@ -211,7 +226,7 @@ body.splash-active > *:not(#splash) { visibility: hidden; }
 <script>
 // Cuenta regresiva — fecha de graduación (actualizar cuando se confirme)
 (function() {
-  var target = new Date(2026, 6, 9, 18, 0, 0); // 9 julio 2026 — pendiente confirmar 9 o 10
+  var target = new Date(2026, 6, 9, 8, 0, 0); // 9 julio 2026, 8:00 AM ceremonia
   function tick() {
     var diff = target - new Date();
     if (diff <= 0) { document.getElementById('countdown').remove(); return; }
