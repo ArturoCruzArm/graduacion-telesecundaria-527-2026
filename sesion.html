@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sesion Fotos — Telesecundaria 527 · 2026</title>
+<link rel="stylesheet" href="css/style.css?v=1">
+<style>
+/* ── PIN Gate ── */
+#pinGate{position:fixed;inset:0;background:var(--primary);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;color:#fff;}
+#pinGate.hidden{display:none;}
+#pinGate h2{margin-bottom:20px;font-size:1.4rem;}
+#pinGate input{font-size:2rem;text-align:center;width:160px;padding:12px;border:3px solid var(--secondary);border-radius:12px;background:rgba(255,255,255,.1);color:#fff;letter-spacing:.4em;}
+#pinGate input::placeholder{color:rgba(255,255,255,.3);}
+#pinGate .pin-err{color:#e74c3c;margin-top:10px;font-size:.85rem;min-height:20px;}
+
+/* ── Tabs ── */
+.main-tabs{display:flex;background:#fff;border-bottom:2px solid #e0e0e0;overflow-x:auto;}
+.main-tab{padding:14px 22px;border:none;background:none;cursor:pointer;font-size:.9rem;font-weight:600;color:#888;white-space:nowrap;border-bottom:3px solid transparent;transition:all .2s;}
+.main-tab.active{color:var(--primary);border-bottom-color:var(--secondary);}
+.tab-panel{display:none;padding:16px;max-width:1200px;margin:0 auto;}
+.tab-panel.active{display:block;}
+
+/* ── Stats ── */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:16px;}
+.stat-box{background:#fff;border-radius:10px;padding:14px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.06);border-top:3px solid var(--secondary);}
+.stat-box .num{font-size:1.6rem;font-weight:800;color:var(--primary);}
+.stat-box .lbl{font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:#888;margin-top:2px;}
+
+/* ── Filters ── */
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px;background:#fff;padding:12px;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,.05);}
+.filters input,.filters select{padding:8px 12px;border:2px solid #e0e0e0;border-radius:20px;font-size:.85rem;background:#fff;}
+.filters input{flex:1;min-width:150px;}
+
+/* ── Photo Grid ── */
+.foto-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;}
+.foto-card{position:relative;border-radius:8px;overflow:hidden;cursor:pointer;background:#eee;border:3px solid transparent;transition:border .2s,transform .1s;}
+.foto-card:hover{transform:scale(1.02);}
+.foto-card img{width:100%;aspect-ratio:1;object-fit:cover;display:block;}
+.foto-card .lbl{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.7);color:#fff;font-size:.68rem;padding:3px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.foto-card .nombre-tag{position:absolute;top:0;left:0;right:0;background:rgba(39,174,96,.85);color:#fff;font-size:.68rem;padding:2px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.foto-card.sin-asignar{border-color:#e74c3c;}
+.foto-card.asignada{border-color:#27ae60;}
+.foto-card.tipo-grupo{border-color:#f39c12;}
+.foto-card.tipo-dron{border-color:#3498db;}
+.foto-card.revisar .nombre-tag{background:rgba(231,76,60,.85);}
+
+/* ── Modal ── */
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;align-items:center;justify-content:center;}
+.modal.open{display:flex;}
+.modal-box{background:#fff;border-radius:14px;padding:20px;width:min(96vw,520px);max-height:90vh;overflow-y:auto;}
+.modal-box h3{color:var(--primary);margin-bottom:14px;}
+.modal-box img{width:100%;border-radius:8px;margin-bottom:12px;}
+.mb-field{margin-bottom:10px;}
+.mb-field label{display:block;font-size:.8rem;font-weight:700;color:#666;margin-bottom:4px;}
+.mb-field input,.mb-field select{width:100%;padding:9px 12px;border:2px solid #e0e0e0;border-radius:8px;font-size:.9rem;}
+.mb-btns{display:flex;gap:10px;margin-top:14px;}
+.mb-btns button{flex:1;padding:11px;border-radius:8px;border:none;cursor:pointer;font-weight:700;font-size:.9rem;}
+.btn-assign{background:var(--primary);color:#fff;}
+.btn-unassign{background:#e74c3c;color:#fff;}
+.btn-close{background:#e0e0e0;color:#555;}
+.alumno-option{padding:6px 10px;cursor:pointer;border-bottom:1px solid #f0f0f0;font-size:.85rem;}
+.alumno-option:hover{background:#f0f4f8;}
+.alumno-option .grupo-tag{font-size:.7rem;color:#888;margin-left:6px;}
+#alumnoResults{max-height:200px;overflow-y:auto;border:1px solid #e0e0e0;border-radius:8px;display:none;}
+
+/* ── Table alumnos ── */
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.06);font-size:.82rem;}
+th{background:var(--primary);color:#fff;padding:8px 10px;text-align:left;font-size:.75rem;letter-spacing:.04em;text-transform:uppercase;}
+td{padding:7px 10px;border-bottom:1px solid #f0f0f0;vertical-align:middle;}
+tr:hover td{background:#f7f9fc;}
+.bpag{padding:2px 8px;border-radius:8px;font-size:.7rem;font-weight:700;}
+.bpag.ok{background:#d1fae5;color:#065f46;}
+.bpag.par{background:#fef3c7;color:#92400e;}
+.bpag.no{background:#fee2e2;color:#991b1b;}
+td input,td select{border:none;background:transparent;font-size:.82rem;width:100%;}
+td input:focus,td select:focus{outline:2px solid var(--accent);border-radius:4px;background:#fff;padding:2px 6px;}
+
+/* ── Pagination ── */
+.pag-bar{display:flex;gap:6px;justify-content:center;margin:14px 0;flex-wrap:wrap;}
+.pag-bar button{padding:6px 14px;border:2px solid #e0e0e0;border-radius:8px;background:#fff;cursor:pointer;font-size:.85rem;}
+.pag-bar button.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+</style>
+</head>
+<body>
+
+<!-- PIN Gate -->
+<div id="pinGate">
+  <h2>Ingresa la clave</h2>
+  <input type="password" id="pinInput" maxlength="4" placeholder="***" autofocus>
+  <div class="pin-err" id="pinErr"></div>
+</div>
+
+<div id="mainContent" style="display:none;">
+
+<nav class="nav-bar">
+  <a href="index.html">Inicio</a>
+  <a href="selector.html">Selector</a>
+  <a href="sesion.html" class="active">Sesion</a>
+  <a href="contrato.html">Contrato</a>
+  <a href="logistica.html">Logistica</a>
+  <a href="datos.html">Datos</a>
+  <a href="invitados.html">Invitados</a>
+</nav>
+
+<div class="page-header">
+  <div><h1>📷 Fotos de Sesion</h1><p style="opacity:.7;font-size:.82rem;" id="schoolName">Telesecundaria 527 · Graduacion 2026</p></div>
+  <span class="badge">Admin</span>
+</div>
+
+<div class="main-tabs">
+  <button class="main-tab active" onclick="showTab('galeria')">📷 Galeria</button>
+  <button class="main-tab" onclick="showTab('alumnos')">👩‍🎓 Alumnos</button>
+</div>
+
+<!-- TAB GALERIA -->
+<div class="tab-panel active" id="tab-galeria">
+  <div class="stats-row" id="statsGaleria">
+    <div class="stat-box"><div class="num" id="sg-total">0</div><div class="lbl">Total Fotos</div></div>
+    <div class="stat-box" style="border-top-color:#27ae60;"><div class="num" id="sg-asig" style="color:#27ae60;">0</div><div class="lbl">Asignadas</div></div>
+    <div class="stat-box" style="border-top-color:#e74c3c;"><div class="num" id="sg-sin" style="color:#e74c3c;">0</div><div class="lbl">Sin Asignar</div></div>
+    <div class="stat-box" style="border-top-color:#f39c12;"><div class="num" id="sg-grupo" style="color:#f39c12;">0</div><div class="lbl">Grupales</div></div>
+    <div class="stat-box" style="border-top-color:#3498db;"><div class="num" id="sg-dron" style="color:#3498db;">0</div><div class="lbl">Dron</div></div>
+  </div>
+
+  <div class="filters">
+    <input type="text" id="fBuscar" placeholder="Buscar alumno o archivo..." oninput="filtrarFotos()">
+    <select id="fGrupo" onchange="filtrarFotos()"><option value="">Todos los grupos</option></select>
+    <select id="fTipo" onchange="filtrarFotos()">
+      <option value="">Todos</option>
+      <option value="individual">Individual</option>
+      <option value="grupo">Grupal</option>
+      <option value="dron">Dron</option>
+      <option value="maestro">Maestro</option>
+      <option value="sin_clasificar">Sin clasificar</option>
+    </select>
+    <select id="fEstado" onchange="filtrarFotos()">
+      <option value="">Todas</option>
+      <option value="asignada">Asignadas</option>
+      <option value="sin">Sin asignar</option>
+      <option value="revisar">REVISAR</option>
+    </select>
+  </div>
+
+  <div class="pag-bar" id="pagBar"></div>
+  <div class="foto-grid" id="fotoGrid"></div>
+  <div class="pag-bar" id="pagBar2"></div>
+</div>
+
+<!-- TAB ALUMNOS -->
+<div class="tab-panel" id="tab-alumnos">
+  <div class="stats-row">
+    <div class="stat-box"><div class="num" id="sa-total">0</div><div class="lbl">Alumnos</div></div>
+    <div class="stat-box" style="border-top-color:#27ae60;"><div class="num" id="sa-cob" style="color:#27ae60;">$0</div><div class="lbl">Cobrado</div></div>
+    <div class="stat-box" style="border-top-color:#e74c3c;"><div class="num" id="sa-pend" style="color:#e74c3c;">$0</div><div class="lbl">Pendiente</div></div>
+    <div class="stat-box"><div class="num" id="sa-fotos">0</div><div class="lbl">Fotos Asig.</div></div>
+  </div>
+  <div class="filters">
+    <input type="text" id="aBuscar" placeholder="Buscar alumno..." oninput="filtrarAlumnos()">
+    <select id="aGrupo" onchange="filtrarAlumnos()"><option value="">Todos</option></select>
+    <select id="aPago" onchange="filtrarAlumnos()">
+      <option value="">Todos</option>
+      <option value="ok">Pagado</option>
+      <option value="par">Parcial</option>
+      <option value="no">Pendiente</option>
+    </select>
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr>
+        <th>#</th><th>Nombre</th><th>Grupo</th><th>Paquete</th>
+        <th>Total</th><th>Anticipo</th><th>Resta</th><th>Estatus</th>
+        <th>Fotos</th><th>Notas</th>
+      </tr></thead>
+      <tbody id="aTbody"></tbody>
+    </table>
+  </div>
+</div>
+
+</div><!-- mainContent -->
+
+<!-- Modal asignar foto -->
+<div class="modal" id="modalFoto">
+  <div class="modal-box">
+    <h3 id="mTitulo">Asignar Foto</h3>
+    <img id="mImg" src="" alt="">
+    <div class="mb-field">
+      <label>Archivo</label>
+      <div id="mArchivo" style="font-weight:700;color:var(--primary);"></div>
+    </div>
+    <div class="mb-field">
+      <label>Asignada a</label>
+      <div id="mActual" style="font-size:.9rem;margin-bottom:6px;"></div>
+    </div>
+    <div class="mb-field">
+      <label>Buscar alumno</label>
+      <input type="text" id="mBuscarAlumno" placeholder="Escribe nombre..." oninput="buscarAlumnoModal()">
+      <div id="alumnoResults"></div>
+    </div>
+    <div class="mb-field">
+      <label>Tipo</label>
+      <select id="mTipo">
+        <option value="individual">Individual</option>
+        <option value="grupo">Grupal</option>
+        <option value="dron">Dron</option>
+        <option value="maestro">Maestro</option>
+        <option value="sin_clasificar">Sin clasificar</option>
+      </select>
+    </div>
+    <div class="mb-field">
+      <label>Notas</label>
+      <input type="text" id="mNotas" placeholder="Observaciones...">
+    </div>
+    <div class="mb-btns">
+      <button class="btn-close" onclick="cerrarModal()">Cerrar</button>
+      <button class="btn-unassign" onclick="desasignar()">Quitar alumno</button>
+      <button class="btn-assign" onclick="guardarAsignacion()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<footer><p><strong>Producciones Foro 7</strong> — 📱 477-920-3776</p></footer>
+
+<script src="js/sesion_fotos.js?v=1"></script>
+<script>
+var SB='https://nzpujmlienzfetqcgsxz.supabase.co';
+var KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im56cHVqbWxpZW56ZmV0cWNnc3h6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2ODYzMzYsImV4cCI6MjA5MDI2MjMzNn0.xl3lsb-KYj5tVLKTnzpbsdEGoV9ySnswH4eyRuyEH1s';
+var SLUG='graduacion-telesecundaria-527-2026';
+var PIN='791';
+var H={'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/json'};
+
+var allAlumnos=[];
+var allFotos={};  // archivo -> {id,alumno_id,tipo,notas}
+var alumnoMap={}; // id -> alumno object
+var currentFoto=null;
+var selectedAlumnoId=null;
+var PAGE_SIZE=60;
+var currentPage=0;
+var filteredFotos=[];
+
+// ── PIN ──
+document.getElementById('pinInput').addEventListener('input',function(){
+  if(this.value===PIN){
+    document.getElementById('pinGate').classList.add('hidden');
+    document.getElementById('mainContent').style.display='';
+    init();
+  }else if(this.value.length>=PIN.length){
+    document.getElementById('pinErr').textContent='Clave incorrecta';
+    this.value='';
+  }
+});
+
+// ── Tabs ──
+function showTab(id){
+  document.querySelectorAll('.tab-panel').forEach(function(p){p.classList.remove('active');});
+  document.querySelectorAll('.main-tab').forEach(function(b){b.classList.remove('active');});
+  document.getElementById('tab-'+id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ── Init ──
+async function init(){
+  await Promise.all([cargarAlumnos(),cargarFotosSesion()]);
+  autoDetectDron();
+  renderGaleria();
+  renderAlumnos();
+}
+
+async function cargarAlumnos(){
+  var r=await fetch(SB+'/rest/v1/alumnos_escuela?evento_slug=eq.'+SLUG+'&order=grupo,nombre&select=*',{headers:H});
+  allAlumnos=await r.json();
+  if(!Array.isArray(allAlumnos))allAlumnos=[];
+  alumnoMap={};
+  allAlumnos.forEach(function(a){alumnoMap[a.id]=a;});
+  llenarFiltroGrupos();
+}
+
+async function cargarFotosSesion(){
+  var r=await fetch(SB+'/rest/v1/fotos_sesion?evento_slug=eq.'+SLUG+'&select=*',{headers:H});
+  var rows=await r.json();
+  allFotos={};
+  if(Array.isArray(rows))rows.forEach(function(f){allFotos[f.archivo]=f;});
+}
+
+function autoDetectDron(){
+  if(typeof SESION_FOTOS==='undefined')return;
+  SESION_FOTOS.forEach(function(f){
+    if(!allFotos[f]&&/^DJI_/i.test(f)){
+      // Auto-insert dron type
+      allFotos[f]={archivo:f,tipo:'dron',alumno_id:null,notas:'auto-detectado',_pending:true};
+    }
+  });
+}
+
+function llenarFiltroGrupos(){
+  var grupos=[...new Set(allAlumnos.map(function(a){return a.grupo;}).filter(Boolean))].sort();
+  ['fGrupo','aGrupo'].forEach(function(id){
+    var sel=document.getElementById(id);
+    var val=sel.value;
+    sel.innerHTML='<option value="">Todos</option>';
+    grupos.forEach(function(g){var o=document.createElement('option');o.value=g;o.textContent=g;sel.appendChild(o);});
+    sel.value=val;
+  });
+}
+
+// ── Galeria ──
+function filtrarFotos(){
+  if(typeof SESION_FOTOS==='undefined'){filteredFotos=[];return;}
+  var q=document.getElementById('fBuscar').value.toLowerCase();
+  var grupo=document.getElementById('fGrupo').value;
+  var tipo=document.getElementById('fTipo').value;
+  var estado=document.getElementById('fEstado').value;
+
+  filteredFotos=SESION_FOTOS.filter(function(f){
+    var info=allFotos[f]||{};
+    var alumno=info.alumno_id?alumnoMap[info.alumno_id]:null;
+    var fTipo=info.tipo||'sin_clasificar';
+    if(/^DJI_/i.test(f)&&!info.tipo)fTipo='dron';
+
+    // tipo filter
+    if(tipo&&fTipo!==tipo)return false;
+
+    // estado filter
+    if(estado==='asignada'&&!info.alumno_id)return false;
+    if(estado==='sin'&&(info.alumno_id||fTipo==='dron'||fTipo==='grupo'))return false;
+    if(estado==='revisar'){
+      var notas=(info.notas||'')+(alumno?(alumno.notas||''):'');
+      if(!/revisar/i.test(notas))return false;
+    }
+
+    // grupo filter
+    if(grupo&&(!alumno||alumno.grupo!==grupo))return false;
+
+    // search
+    if(q){
+      var haystack=(f+' '+(alumno?alumno.nombre:'')+' '+(info.notas||'')).toLowerCase();
+      if(!haystack.includes(q))return false;
+    }
+    return true;
+  });
+
+  currentPage=0;
+  renderFotoGrid();
+  updateStatsGaleria();
+}
+
+function renderGaleria(){
+  filtrarFotos();
+}
+
+function updateStatsGaleria(){
+  if(typeof SESION_FOTOS==='undefined')return;
+  var total=SESION_FOTOS.length,asig=0,grupo=0,dron=0;
+  SESION_FOTOS.forEach(function(f){
+    var info=allFotos[f]||{};
+    var t=info.tipo||(/^DJI_/i.test(f)?'dron':'sin_clasificar');
+    if(info.alumno_id)asig++;
+    if(t==='grupo')grupo++;
+    if(t==='dron')dron++;
+  });
+  document.getElementById('sg-total').textContent=total;
+  document.getElementById('sg-asig').textContent=asig;
+  document.getElementById('sg-sin').textContent=total-asig-grupo-dron;
+  document.getElementById('sg-grupo').textContent=grupo;
+  document.getElementById('sg-dron').textContent=dron;
+}
+
+function renderFotoGrid(){
+  var grid=document.getElementById('fotoGrid');
+  var totalPages=Math.ceil(filteredFotos.length/PAGE_SIZE);
+  var start=currentPage*PAGE_SIZE;
+  var page=filteredFotos.slice(start,start+PAGE_SIZE);
+
+  grid.innerHTML=page.map(function(f){
+    var info=allFotos[f]||{};
+    var alumno=info.alumno_id?alumnoMap[info.alumno_id]:null;
+    var tipo=info.tipo||(/^DJI_/i.test(f)?'dron':'sin_clasificar');
+    var cls='foto-card';
+    if(alumno)cls+=' asignada';
+    else if(tipo==='grupo')cls+=' tipo-grupo';
+    else if(tipo==='dron')cls+=' tipo-dron';
+    else cls+=' sin-asignar';
+
+    var notas=(info.notas||'')+(alumno?(alumno.notas||''):'');
+    if(/revisar/i.test(notas))cls+=' revisar';
+
+    var nombre=alumno?alumno.nombre:(tipo!=='sin_clasificar'?tipo:'');
+    var tag=nombre?'<div class="nombre-tag">'+esc(nombre)+'</div>':'';
+    var num=f.replace(/\.\w+$/,'');
+    return '<div class="'+cls+'" onclick="abrirModalFoto(\''+esc(f)+'\')">'
+      +'<img src="img/thumb/'+encodeURIComponent(f)+'" loading="lazy" alt="'+esc(num)+'">'
+      +tag
+      +'<div class="lbl">'+esc(num)+'</div>'
+      +'</div>';
+  }).join('');
+
+  renderPaginacion(totalPages);
+}
+
+function renderPaginacion(totalPages){
+  if(totalPages<=1){document.getElementById('pagBar').innerHTML='';document.getElementById('pagBar2').innerHTML='';return;}
+  var html='';
+  for(var i=0;i<totalPages;i++){
+    html+='<button class="'+(i===currentPage?'active':'')+'" onclick="irPagina('+i+')">'+(i+1)+'</button>';
+  }
+  html='<span style="font-size:.8rem;color:#888;">'+filteredFotos.length+' fotos</span> '+html;
+  document.getElementById('pagBar').innerHTML=html;
+  document.getElementById('pagBar2').innerHTML=html;
+}
+
+function irPagina(p){currentPage=p;renderFotoGrid();window.scrollTo(0,200);}
+
+// ── Modal Foto ──
+function abrirModalFoto(archivo){
+  currentFoto=archivo;
+  selectedAlumnoId=null;
+  var info=allFotos[archivo]||{};
+  var alumno=info.alumno_id?alumnoMap[info.alumno_id]:null;
+
+  document.getElementById('mImg').src='img/'+encodeURIComponent(archivo);
+  document.getElementById('mArchivo').textContent=archivo;
+  document.getElementById('mActual').textContent=alumno?alumno.nombre+' ('+alumno.grupo+')':'Sin asignar';
+  document.getElementById('mActual').style.color=alumno?'#27ae60':'#e74c3c';
+  document.getElementById('mTipo').value=info.tipo||(/^DJI_/i.test(archivo)?'dron':'individual');
+  document.getElementById('mNotas').value=info.notas||'';
+  document.getElementById('mBuscarAlumno').value='';
+  document.getElementById('alumnoResults').style.display='none';
+  selectedAlumnoId=info.alumno_id||null;
+  document.getElementById('modalFoto').classList.add('open');
+}
+
+function cerrarModal(){document.getElementById('modalFoto').classList.remove('open');}
+
+function buscarAlumnoModal(){
+  var q=document.getElementById('mBuscarAlumno').value.toLowerCase();
+  var div=document.getElementById('alumnoResults');
+  if(q.length<1){div.style.display='none';return;}
+  var matches=allAlumnos.filter(function(a){return a.nombre.toLowerCase().includes(q);}).slice(0,15);
+  div.innerHTML=matches.map(function(a){
+    return '<div class="alumno-option" onclick="selAlumno(\''+a.id+'\',\''+esc(a.nombre)+'\')">'+esc(a.nombre)+'<span class="grupo-tag">'+esc(a.grupo)+'</span></div>';
+  }).join('');
+  div.style.display=matches.length?'block':'none';
+}
+
+function selAlumno(id,nombre){
+  selectedAlumnoId=id;
+  document.getElementById('mBuscarAlumno').value=nombre;
+  document.getElementById('alumnoResults').style.display='none';
+}
+
+async function guardarAsignacion(){
+  if(!currentFoto)return;
+  var tipo=document.getElementById('mTipo').value;
+  var notas=document.getElementById('mNotas').value.trim();
+  var existing=allFotos[currentFoto];
+
+  if(existing&&existing.id&&!existing._pending){
+    // PATCH
+    var body={tipo:tipo,notas:notas};
+    if(selectedAlumnoId)body.alumno_id=selectedAlumnoId;
+    await fetch(SB+'/rest/v1/fotos_sesion?id=eq.'+existing.id,{
+      method:'PATCH',headers:Object.assign({},H,{Prefer:'return=minimal'}),body:JSON.stringify(body)
+    });
+  }else{
+    // INSERT
+    var body={evento_slug:SLUG,archivo:currentFoto,tipo:tipo,notas:notas};
+    if(selectedAlumnoId)body.alumno_id=selectedAlumnoId;
+    await fetch(SB+'/rest/v1/fotos_sesion',{
+      method:'POST',headers:Object.assign({},H,{Prefer:'return=minimal'}),body:JSON.stringify(body)
+    });
+  }
+
+  await cargarFotosSesion();
+  autoDetectDron();
+  renderGaleria();
+  cerrarModal();
+}
+
+async function desasignar(){
+  if(!currentFoto)return;
+  var existing=allFotos[currentFoto];
+  if(existing&&existing.id&&!existing._pending){
+    await fetch(SB+'/rest/v1/fotos_sesion?id=eq.'+existing.id,{
+      method:'PATCH',headers:Object.assign({},H,{Prefer:'return=minimal'}),body:JSON.stringify({alumno_id:null})
+    });
+    await cargarFotosSesion();
+    autoDetectDron();
+    renderGaleria();
+  }
+  cerrarModal();
+}
+
+// ── Alumnos ──
+function renderAlumnos(){
+  var tbody=document.getElementById('aTbody');
+  var cobrado=0,totalGen=0,fotosAsig=0;
+  var fotosPorAlumno={};
+  Object.values(allFotos).forEach(function(f){
+    if(f.alumno_id){fotosPorAlumno[f.alumno_id]=(fotosPorAlumno[f.alumno_id]||0)+1;fotosAsig++;}
+  });
+
+  tbody.innerHTML=allAlumnos.map(function(a,i){
+    var t=a.total||0,ant=a.anticipo||0,rest=t-ant;
+    cobrado+=ant;totalGen+=t;
+    var st=ant>=t&&t>0?'ok':ant>0?'par':'no';
+    var badge={ok:'<span class="bpag ok">Pagado</span>',par:'<span class="bpag par">Parcial</span>',no:'<span class="bpag no">Pend.</span>'}[st];
+    var nf=fotosPorAlumno[a.id]||0;
+    return '<tr data-id="'+a.id+'" data-grupo="'+(a.grupo||'')+'" data-st="'+st+'" data-nom="'+(a.nombre||'').toLowerCase()+'">'
+      +'<td>'+(i+1)+'</td>'
+      +'<td><input value="'+esc(a.nombre)+'" onblur="updAlumno(this,\'nombre\')"></td>'
+      +'<td>'+esc(a.grupo||'')+'</td>'
+      +'<td><input value="'+esc(a.paquete||'')+'" onblur="updAlumno(this,\'paquete\')" placeholder="—" style="width:80px;"></td>'
+      +'<td><input type="number" value="'+t+'" onblur="updAlumno(this,\'total\')" style="width:60px;"></td>'
+      +'<td><input type="number" value="'+ant+'" onblur="updAlumno(this,\'anticipo\')" style="width:60px;"></td>'
+      +'<td style="color:#e74c3c;font-weight:700;">$'+rest+'</td>'
+      +'<td>'+badge+'</td>'
+      +'<td style="text-align:center;font-weight:700;color:var(--primary);">'+nf+'</td>'
+      +'<td><input value="'+esc(a.notas||'')+'" onblur="updAlumno(this,\'notas\')" placeholder="—" style="font-size:.78rem;"></td>'
+      +'</tr>';
+  }).join('');
+
+  document.getElementById('sa-total').textContent=allAlumnos.length;
+  document.getElementById('sa-cob').textContent='$'+cobrado;
+  document.getElementById('sa-pend').textContent='$'+(totalGen-cobrado);
+  document.getElementById('sa-fotos').textContent=fotosAsig;
+}
+
+function filtrarAlumnos(){
+  var q=document.getElementById('aBuscar').value.toLowerCase();
+  var g=document.getElementById('aGrupo').value;
+  var p=document.getElementById('aPago').value;
+  document.querySelectorAll('#aTbody tr').forEach(function(r){
+    r.style.display=(!q||r.dataset.nom.includes(q))&&(!g||r.dataset.grupo===g)&&(!p||r.dataset.st===p)?'':'none';
+  });
+}
+
+async function updAlumno(input,campo){
+  var row=input.closest('tr');var id=row.dataset.id;
+  var val=input.type==='number'?parseFloat(input.value)||0:input.value;
+  var body={};body[campo]=val;
+  await fetch(SB+'/rest/v1/alumnos_escuela?id=eq.'+id,{
+    method:'PATCH',headers:Object.assign({},H,{Prefer:'return=minimal'}),body:JSON.stringify(body)
+  });
+  await cargarAlumnos();
+  renderAlumnos();
+}
+
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+</script>
+</body>
+</html>
