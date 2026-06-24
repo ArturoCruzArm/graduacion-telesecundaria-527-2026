@@ -249,6 +249,7 @@ footer{padding:6px 12px;font-size:.72rem;flex-shrink:0;}
     </div>
     <div class="mb-btns">
       <button class="btn-close" onclick="cerrarModal()">Cerrar</button>
+      <button style="background:#3498db;color:#fff;" onclick="descargarFoto()">Descargar</button>
       <button class="btn-unassign" onclick="desasignar()">Quitar alumno</button>
       <button class="btn-assign" onclick="guardarAsignacion()">Guardar</button>
     </div>
@@ -464,6 +465,14 @@ function abrirModalFoto(archivo){
   selectedAlumnoId=info.alumno_id||null;
   document.getElementById('modalFoto').classList.add('open');
   document.body.style.overflow='hidden';
+}
+
+function descargarFoto(){
+  if(!currentFoto)return;
+  var a=document.createElement('a');
+  a.href='img/'+encodeURIComponent(currentFoto);
+  a.download=currentFoto;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
 }
 
 function cerrarModal(){document.getElementById('modalFoto').classList.remove('open');document.body.style.overflow='';}
