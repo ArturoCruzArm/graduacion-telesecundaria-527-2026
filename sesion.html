@@ -478,6 +478,7 @@ function descargarFoto(){
 function cerrarModal(){document.getElementById('modalFoto').classList.remove('open');document.body.style.overflow='';}
 
 function buscarAlumnoModal(){
+  selectedAlumnoId=null;
   var q=document.getElementById('mBuscarAlumno').value.toLowerCase();
   var div=document.getElementById('alumnoResults');
   if(q.length<1){div.style.display='none';return;}
@@ -498,6 +499,18 @@ async function guardarAsignacion(){
   if(!currentFoto)return;
   var tipo=document.getElementById('mTipo').value;
   var notas=document.getElementById('mNotas').value.trim();
+  // Auto-seleccionar si el texto coincide con exactamente un alumno
+  if(!selectedAlumnoId){
+    var q=document.getElementById('mBuscarAlumno').value.trim().toLowerCase();
+    if(q){
+      var matches=allAlumnos.filter(function(a){return a.nombre.toLowerCase()===q;});
+      if(matches.length===1)selectedAlumnoId=matches[0].id;
+      else{
+        var partial=allAlumnos.filter(function(a){return a.nombre.toLowerCase().includes(q);});
+        if(partial.length===1)selectedAlumnoId=partial[0].id;
+      }
+    }
+  }
   var existing=allFotos[currentFoto];
 
   if(existing&&existing.id&&!existing._pending){

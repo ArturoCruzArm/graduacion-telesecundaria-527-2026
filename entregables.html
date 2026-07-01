@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Entregables — Telesecundaria 527</title>
+<link rel="stylesheet" href="css/style.css?v=2">
+<style>
+/* ── Layout: fullscreen, no body scroll ── */
+html,body{height:100%;overflow:hidden;}
+#mainContent{display:none;height:100vh;flex-direction:column;}
+#mainContent.visible{display:flex;}
+
+/* ── PIN Gate ── */
+#pinGate{position:fixed;inset:0;background:var(--primary);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;color:#fff;}
+#pinGate.hidden{display:none;}
+#pinGate h2{margin-bottom:20px;font-size:clamp(1.1rem,3vw,1.4rem);}
+#pinGate input{font-size:2rem;text-align:center;width:160px;padding:12px;border:3px solid var(--secondary);border-radius:12px;background:rgba(255,255,255,.1);color:#fff;letter-spacing:.4em;}
+#pinGate input::placeholder{color:rgba(255,255,255,.3);}
+#pinGate .pin-err{color:#e74c3c;margin-top:10px;font-size:.85rem;min-height:20px;}
+
+/* ── Compact header ── */
+.page-header{padding:8px 16px;}
+.page-header h1{font-size:clamp(.9rem,2.5vw,1.2rem);}
+
+/* ── Nav compact ── */
+.nav-bar{padding:4px 12px;gap:4px;}
+.nav-bar a{font-size:.75rem;padding:4px 10px;}
+
+/* ── Category Tabs ── */
+.cat-tabs{display:flex;background:#fff;border-bottom:2px solid #e0e0e0;flex-shrink:0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:thin;}
+.cat-tabs::-webkit-scrollbar{height:3px;}
+.cat-tabs::-webkit-scrollbar-thumb{background:#ccc;border-radius:3px;}
+.cat-tab{padding:8px 18px;border:none;background:none;cursor:pointer;font-size:.82rem;font-weight:600;color:#888;white-space:nowrap;border-bottom:3px solid transparent;transition:all .2s;flex-shrink:0;}
+.cat-tab.active{color:var(--primary);border-bottom-color:var(--secondary);}
+
+/* ── Stats ── */
+.stats-row{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;}
+.stat-box{flex:1;min-width:80px;background:#fff;border-radius:8px;padding:6px 8px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.06);border-top:3px solid var(--secondary);}
+.stat-box .num{font-size:clamp(1rem,2.5vw,1.4rem);font-weight:800;color:var(--primary);}
+.stat-box .lbl{font-size:.6rem;text-transform:uppercase;letter-spacing:.04em;color:#888;}
+
+/* ── Content area ── */
+.content-area{flex:1;overflow-y:auto;overflow-x:hidden;padding:10px 12px;display:flex;flex-direction:column;}
+
+/* ── Photo Grid ── */
+.galeria-scroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;}
+.foto-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:6px;padding-bottom:8px;}
+.foto-card{position:relative;border-radius:6px;overflow:hidden;cursor:pointer;background:#eee;border:3px solid transparent;transition:border .2s,transform .1s;}
+.foto-card:hover{transform:scale(1.02);}
+.foto-card img{width:100%;aspect-ratio:1;object-fit:cover;display:block;}
+.foto-card .lbl{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.7);color:#fff;font-size:.6rem;padding:2px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.foto-card .dl-btn{position:absolute;top:4px;right:4px;width:28px;height:28px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:14px;line-height:1;transition:background .2s;z-index:2;}
+.foto-card .dl-btn:hover{background:var(--secondary);color:var(--primary);}
+
+/* ── Modal ── */
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;align-items:center;justify-content:center;}
+.modal.open{display:flex;}
+.modal-box{background:#fff;border-radius:14px;padding:16px;width:min(96vw,500px);max-height:92vh;overflow-y:auto;}
+.modal-box h3{color:var(--primary);margin-bottom:10px;font-size:clamp(.9rem,2.5vw,1.1rem);}
+.modal-box img{width:100%;border-radius:8px;margin-bottom:10px;max-height:50vh;object-fit:contain;}
+.modal-info{margin-bottom:12px;font-size:.85rem;color:#555;word-break:break-all;}
+.modal-btns{display:flex;gap:8px;margin-top:10px;}
+.modal-btns button,.modal-btns a{flex:1;padding:10px;border-radius:8px;border:none;cursor:pointer;font-weight:700;font-size:.85rem;text-align:center;text-decoration:none;display:inline-block;}
+.btn-download{background:var(--primary);color:#fff;}
+.btn-download:hover{opacity:.9;}
+.btn-close{background:#e0e0e0;color:#555;}
+
+/* ── Pagination ── */
+.pag-bar{display:flex;gap:4px;justify-content:center;padding:6px 0;flex-wrap:wrap;flex-shrink:0;}
+.pag-bar button{padding:4px 10px;border:2px solid #e0e0e0;border-radius:6px;background:#fff;cursor:pointer;font-size:.78rem;}
+.pag-bar button.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+
+/* ── Footer compact ── */
+footer{padding:6px 12px;font-size:.72rem;flex-shrink:0;}
+
+/* ── Desktop ── */
+@media(min-width:900px){
+  .foto-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));}
+  .content-area{padding:12px 20px;}
+}
+/* ── Mobile ── */
+@media(max-width:480px){
+  .foto-grid{grid-template-columns:repeat(auto-fill,minmax(85px,1fr));gap:4px;}
+  .stat-box{min-width:60px;padding:4px 4px;}
+  .stat-box .num{font-size:.9rem;}
+  .nav-bar a{font-size:.68rem;padding:3px 7px;}
+  .modal-box{border-radius:0;width:100vw;max-height:100vh;height:100vh;}
+  .modal-box img{max-height:35vh;}
+  .foto-card .dl-btn{width:24px;height:24px;font-size:12px;}
+}
+</style>
+</head>
+<body>
+
+<!-- PIN Gate -->
+<div id="pinGate">
+  <h2>Ingresa la clave</h2>
+  <input type="password" id="pinInput" maxlength="4" placeholder="***" autofocus>
+  <div class="pin-err" id="pinErr"></div>
+</div>
+
+<div id="mainContent">
+
+<nav class="nav-bar">
+  <a href="index.html">Inicio</a>
+  <a href="selector.html">Selector</a>
+  <a href="sesion.html">Sesion</a>
+  <a href="contrato.html">Contrato</a>
+  <a href="logistica.html">Logistica</a>
+  <a href="datos.html">Datos</a>
+  <a href="invitados.html">Invitados</a>
+  <a href="entregables.html" class="active">Entregables</a>
+</nav>
+
+<div class="page-header">
+  <div><h1>📦 Entregables</h1><p style="opacity:.7;font-size:.82rem;">Telesecundaria 527 · Graduacion 2026</p></div>
+</div>
+
+<div class="cat-tabs" id="catTabs"></div>
+
+<div class="content-area">
+  <div class="stats-row">
+    <div class="stat-box"><div class="num" id="st-fotos">0</div><div class="lbl">Fotos</div></div>
+    <div class="stat-box" style="border-top-color:#3498db;"><div class="num" id="st-cats" style="color:#3498db;">0</div><div class="lbl">Categorias</div></div>
+  </div>
+  <div class="pag-bar" id="pagBar"></div>
+  <div class="galeria-scroll">
+    <div class="foto-grid" id="fotoGrid"></div>
+  </div>
+  <div class="pag-bar" id="pagBar2"></div>
+</div>
+
+</div><!-- mainContent -->
+
+<!-- Modal -->
+<div class="modal" id="modalFoto" onclick="if(event.target===this)cerrarModal()">
+  <div class="modal-box">
+    <h3 id="mTitulo">Vista previa</h3>
+    <img id="mImg" src="" alt="">
+    <div class="modal-info" id="mArchivo"></div>
+    <div class="modal-btns">
+      <button class="btn-close" onclick="cerrarModal()">Cerrar</button>
+      <a class="btn-download" id="mDescargar" href="#" download>Descargar</a>
+    </div>
+  </div>
+</div>
+
+<footer><p><strong>Producciones Foro 7</strong> — 📱 477-920-3776</p></footer>
+
+<script src="js/entregables_data.js?v=1"></script>
+<script>
+var PIN='791';
+var PAGE_SIZE=60;
+var currentCat='';
+var currentPage=0;
+var currentFotos=[];
+
+// ── PIN ──
+document.getElementById('pinInput').addEventListener('input',function(){
+  if(this.value===PIN){
+    document.getElementById('pinGate').classList.add('hidden');
+    document.getElementById('mainContent').classList.add('visible');
+    init();
+  }else if(this.value.length>=PIN.length){
+    document.getElementById('pinErr').textContent='Clave incorrecta';
+    this.value='';
+  }
+});
+
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+
+// ── Init ──
+function init(){
+  if(typeof ENTREGABLES==='undefined'){
+    document.getElementById('fotoGrid').innerHTML='<p style="padding:20px;color:#888;">No hay entregables disponibles aun.</p>';
+    return;
+  }
+  var cats=Object.keys(ENTREGABLES);
+  document.getElementById('st-cats').textContent=cats.length;
+  renderTabs(cats);
+  if(cats.length>0) selectCat(cats[0]);
+}
+
+function renderTabs(cats){
+  var container=document.getElementById('catTabs');
+  container.innerHTML=cats.map(function(c){
+    return '<button class="cat-tab" data-cat="'+esc(c)+'" onclick="selectCat(\''+esc(c).replace(/'/g,"\\'")+'\')">'+esc(c)+'</button>';
+  }).join('');
+}
+
+function selectCat(cat){
+  currentCat=cat;
+  currentPage=0;
+  document.querySelectorAll('.cat-tab').forEach(function(b){
+    b.classList.toggle('active',b.dataset.cat===cat);
+  });
+  var data=ENTREGABLES[cat];
+  currentFotos=data&&data.fotos?data.fotos:[];
+  document.getElementById('st-fotos').textContent=currentFotos.length;
+  renderGrid();
+}
+
+function renderGrid(){
+  var grid=document.getElementById('fotoGrid');
+  var totalPages=Math.ceil(currentFotos.length/PAGE_SIZE);
+  var start=currentPage*PAGE_SIZE;
+  var page=currentFotos.slice(start,start+PAGE_SIZE);
+  var base=ENTREGABLES[currentCat].base||'';
+
+  grid.innerHTML=page.map(function(f){
+    var src=encodeURIComponent(base)+encodeURIComponent(f).replace(/%2F/g,'/');
+    var name=f.replace(/\.\w+$/,'');
+    return '<div class="foto-card" onclick="abrirModal(\''+esc(currentCat).replace(/'/g,"\\'")+'\',\''+esc(f).replace(/'/g,"\\'")+'\')\">'
+      +'<a class="dl-btn" href="'+src+'" download="'+esc(f)+'" onclick="event.stopPropagation()" title="Descargar">&#8681;</a>'
+      +'<img src="'+src+'" loading="lazy" alt="'+esc(name)+'">'
+      +'<div class="lbl">'+esc(name)+'</div>'
+      +'</div>';
+  }).join('');
+
+  renderPag(totalPages);
+}
+
+function renderPag(totalPages){
+  if(totalPages<=1){document.getElementById('pagBar').innerHTML='';document.getElementById('pagBar2').innerHTML='';return;}
+  var html='<span style="font-size:.8rem;color:#888;">'+currentFotos.length+' fotos</span> ';
+  for(var i=0;i<totalPages;i++){
+    html+='<button class="'+(i===currentPage?'active':'')+'" onclick="irPagina('+i+')">'+(i+1)+'</button>';
+  }
+  document.getElementById('pagBar').innerHTML=html;
+  document.getElementById('pagBar2').innerHTML=html;
+}
+
+function irPagina(p){currentPage=p;renderGrid();var s=document.querySelector('.galeria-scroll');if(s)s.scrollTop=0;}
+
+// ── Modal ──
+function abrirModal(cat,file){
+  var data=ENTREGABLES[cat];
+  var base=data.base||'';
+  var src=encodeURIComponent(base)+encodeURIComponent(file).replace(/%2F/g,'/');
+  document.getElementById('mTitulo').textContent=cat;
+  document.getElementById('mImg').src=src;
+  document.getElementById('mArchivo').textContent=file;
+  var dl=document.getElementById('mDescargar');
+  dl.href=src;
+  dl.download=file;
+  document.getElementById('modalFoto').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+
+function cerrarModal(){document.getElementById('modalFoto').classList.remove('open');document.body.style.overflow='';}
+
+document.addEventListener('keydown',function(e){if(e.key==='Escape')cerrarModal();});
+</script>
+</body>
+</html>
