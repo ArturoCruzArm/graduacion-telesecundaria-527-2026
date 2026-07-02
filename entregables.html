@@ -210,8 +210,9 @@ function renderGrid(){
   var base=ENTREGABLES[currentCat].base||'';
 
   grid.innerHTML=page.map(function(f){
-    var src=encodeURIComponent(base)+encodeURIComponent(f).replace(/%2F/g,'/');
-    var name=f.replace(/\.\w+$/,'');
+    var src=base.split('/').map(encodeURIComponent).join('/')+encodeURIComponent(f);
+    var baseKey=f.match(/^(DSC_\d{4}|DJI_\d{8}_\d{6}_\d{3})/);
+    var name=(baseKey && typeof NOMBRES!=='undefined' && NOMBRES[baseKey[1]]) || f.replace(/\.\w+$/,'');
     return '<div class="foto-card" onclick="abrirModal(\''+esc(currentCat).replace(/'/g,"\\'")+'\',\''+esc(f).replace(/'/g,"\\'")+'\')\">'
       +'<a class="dl-btn" href="'+src+'" download="'+esc(f)+'" onclick="event.stopPropagation()" title="Descargar">&#8681;</a>'
       +'<img src="'+src+'" loading="lazy" alt="'+esc(name)+'">'
@@ -238,10 +239,12 @@ function irPagina(p){currentPage=p;renderGrid();var s=document.querySelector('.g
 function abrirModal(cat,file){
   var data=ENTREGABLES[cat];
   var base=data.base||'';
-  var src=encodeURIComponent(base)+encodeURIComponent(file).replace(/%2F/g,'/');
-  document.getElementById('mTitulo').textContent=cat;
+  var src=base.split('/').map(encodeURIComponent).join('/')+encodeURIComponent(file);
+  var baseKey=file.match(/^(DSC_\d{4}|DJI_\d{8}_\d{6}_\d{3})/);
+  var nombre=(baseKey && typeof NOMBRES!=='undefined' && NOMBRES[baseKey[1]]) || '';
+  document.getElementById('mTitulo').textContent=nombre||cat;
   document.getElementById('mImg').src=src;
-  document.getElementById('mArchivo').textContent=file;
+  document.getElementById('mArchivo').textContent=nombre||file;
   var dl=document.getElementById('mDescargar');
   dl.href=src;
   dl.download=file;
