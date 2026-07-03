@@ -120,6 +120,12 @@ body { font-family: 'Lato', sans-serif; }
 }
 
 body.splash-active > *:not(#splash) { visibility: hidden; }
+
+/* ── Floating music button ── */
+.music-btn{position:fixed;bottom:18px;right:18px;z-index:900;width:48px;height:48px;border-radius:50%;border:none;background:var(--primary);color:#fff;font-size:1.4rem;cursor:pointer;box-shadow:0 3px 12px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;transition:transform .2s,background .2s;-webkit-tap-highlight-color:transparent;}
+.music-btn:hover{transform:scale(1.1);}
+.music-btn.playing{animation:pulse-music 1.5s ease-in-out infinite;}
+@keyframes pulse-music{0%,100%{box-shadow:0 3px 12px rgba(0,0,0,.3)}50%{box-shadow:0 3px 20px rgba(201,168,76,.6)}}
 </style>
 </head>
 <body>
@@ -274,6 +280,15 @@ function abrirInvitacion() {
   });
   setTimeout(function(){ if(splash.parentNode) splash.parentNode.removeChild(splash); }, 700);
 }
+</script>
+
+<audio id="bgMusic" src="audio/musica.mp3?v=1" loop preload="auto"></audio>
+<button class="music-btn" id="musicBtn" onclick="toggleMusic()" title="Musica">&#9835;</button>
+<script>
+var bgm=document.getElementById('bgMusic'),mbtn=document.getElementById('musicBtn'),musicOn=false;
+function toggleMusic(){if(musicOn){bgm.pause();mbtn.classList.remove('playing');mbtn.innerHTML='&#9835;';}else{bgm.play();mbtn.classList.add('playing');mbtn.innerHTML='&#9646;&#9646;';}musicOn=!musicOn;}
+var _origAbrir=abrirInvitacion;
+abrirInvitacion=function(){_origAbrir();if(!musicOn){bgm.play().then(function(){musicOn=true;mbtn.classList.add('playing');mbtn.innerHTML='&#9646;&#9646;';}).catch(function(){});}};
 </script>
 
 <script>window.EVENTO_SLUG='graduacion-telesecundaria-527-2026';</script>
