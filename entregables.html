@@ -54,18 +54,31 @@ html,body{height:100%;overflow:hidden;}
 .foto-card .dl-btn{position:absolute;top:4px;right:4px;width:28px;height:28px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:14px;line-height:1;transition:background .2s;z-index:2;}
 .foto-card .dl-btn:hover{background:var(--secondary);color:var(--primary);}
 
-/* ── Modal ── */
-.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;align-items:center;justify-content:center;}
+/* ── Modal / Lightbox ── */
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:200;flex-direction:column;}
 .modal.open{display:flex;}
-.modal-box{background:#fff;border-radius:14px;padding:16px;width:min(96vw,500px);max-height:92vh;overflow-y:auto;}
-.modal-box h3{color:var(--primary);margin-bottom:10px;font-size:clamp(.9rem,2.5vw,1.1rem);}
-.modal-box img{width:100%;border-radius:8px;margin-bottom:10px;max-height:50vh;object-fit:contain;}
-.modal-info{margin-bottom:12px;font-size:.85rem;color:#555;word-break:break-all;}
-.modal-btns{display:flex;gap:8px;margin-top:10px;}
-.modal-btns button,.modal-btns a{flex:1;padding:10px;border-radius:8px;border:none;cursor:pointer;font-weight:700;font-size:.85rem;text-align:center;text-decoration:none;display:inline-block;}
+.modal-top{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;flex-shrink:0;color:#fff;}
+.modal-top .m-counter{font-size:.8rem;opacity:.7;}
+.modal-top .m-close{background:none;border:none;color:#fff;font-size:1.6rem;cursor:pointer;padding:4px 8px;line-height:1;}
+.modal-center{flex:1;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;min-height:0;}
+.modal-center img{max-width:95%;max-height:100%;object-fit:contain;border-radius:4px;user-select:none;}
+.modal-nav{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.15);border:none;color:#fff;font-size:2rem;padding:12px 16px;cursor:pointer;border-radius:8px;line-height:1;transition:background .2s;z-index:5;}
+.modal-nav:hover{background:rgba(255,255,255,.35);}
+.modal-nav.prev{left:8px;}
+.modal-nav.next{right:8px;}
+.modal-bottom{flex-shrink:0;padding:10px 14px;color:#fff;background:rgba(0,0,0,.5);}
+.modal-bottom .m-filename{font-size:.75rem;opacity:.6;margin-bottom:4px;word-break:break-all;}
+.modal-bottom .m-nombre-row{display:flex;gap:6px;align-items:center;margin-bottom:8px;}
+.modal-bottom .m-nombre-input{flex:1;padding:6px 10px;border-radius:6px;border:2px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;font-size:.9rem;}
+.modal-bottom .m-nombre-input:focus{border-color:var(--secondary);outline:none;}
+.modal-bottom .m-save{padding:6px 14px;border-radius:6px;border:none;background:var(--secondary);color:var(--primary);font-weight:700;font-size:.82rem;cursor:pointer;}
+.modal-bottom .m-save:hover{opacity:.85;}
+.modal-bottom .m-save.saved{background:#2ecc71;color:#fff;}
+.modal-bottom .m-actions{display:flex;gap:8px;}
+.modal-bottom .m-actions a,.modal-bottom .m-actions button{padding:8px 14px;border-radius:6px;border:none;cursor:pointer;font-weight:600;font-size:.8rem;text-align:center;text-decoration:none;display:inline-block;}
 .btn-download{background:var(--primary);color:#fff;}
 .btn-download:hover{opacity:.9;}
-.btn-close{background:#e0e0e0;color:#555;}
+.btn-close{background:rgba(255,255,255,.15);color:#fff;}
 
 /* ── Pagination ── */
 .pag-bar{display:flex;gap:4px;justify-content:center;padding:6px 0;flex-wrap:wrap;flex-shrink:0;}
@@ -86,8 +99,6 @@ footer{padding:6px 12px;font-size:.72rem;flex-shrink:0;}
   .stat-box{min-width:60px;padding:4px 4px;}
   .stat-box .num{font-size:.9rem;}
   .nav-bar a{font-size:.68rem;padding:3px 7px;}
-  .modal-box{border-radius:0;width:100vw;max-height:100vh;height:100vh;}
-  .modal-box img{max-height:35vh;}
   .foto-card .dl-btn{width:24px;height:24px;font-size:12px;}
 }
 </style>
@@ -134,13 +145,24 @@ footer{padding:6px 12px;font-size:.72rem;flex-shrink:0;}
 
 </div><!-- mainContent -->
 
-<!-- Modal -->
-<div class="modal" id="modalFoto" onclick="if(event.target===this)cerrarModal()">
-  <div class="modal-box">
-    <h3 id="mTitulo">Vista previa</h3>
-    <img id="mImg" src="" alt="">
-    <div class="modal-info" id="mArchivo"></div>
-    <div class="modal-btns">
+<!-- Lightbox Modal -->
+<div class="modal" id="modalFoto">
+  <div class="modal-top">
+    <span class="m-counter" id="mCounter"></span>
+    <button class="m-close" onclick="cerrarModal()" title="Cerrar (Esc)">&times;</button>
+  </div>
+  <div class="modal-center" id="mCenter">
+    <button class="modal-nav prev" onclick="navModal(-1)" title="Anterior">&lsaquo;</button>
+    <img id="mImg" src="" alt="" onclick="navModal(1)">
+    <button class="modal-nav next" onclick="navModal(1)" title="Siguiente">&rsaquo;</button>
+  </div>
+  <div class="modal-bottom">
+    <div class="m-filename" id="mArchivo"></div>
+    <div class="m-nombre-row">
+      <input class="m-nombre-input" id="mNombreInput" type="text" placeholder="Nombre del alumno">
+      <button class="m-save" id="mSaveBtn" onclick="guardarNombre()">Guardar</button>
+    </div>
+    <div class="m-actions">
       <button class="btn-close" onclick="cerrarModal()">Cerrar</button>
       <a class="btn-download" id="mDescargar" href="#" download>Descargar</a>
     </div>
@@ -235,26 +257,90 @@ function renderPag(totalPages){
 
 function irPagina(p){currentPage=p;renderGrid();var s=document.querySelector('.galeria-scroll');if(s)s.scrollTop=0;}
 
-// ── Modal ──
-function abrirModal(cat,file){
-  var data=ENTREGABLES[cat];
-  var base=data.base||'';
-  var src=base.split('/').map(encodeURIComponent).join('/')+encodeURIComponent(file);
-  var baseKey=file.match(/^(DSC_\d{4}|DJI_\d{8}_\d{6}_\d{3})/);
-  var nombre=(baseKey && typeof NOMBRES!=='undefined' && NOMBRES[baseKey[1]]) || '';
-  document.getElementById('mTitulo').textContent=nombre||cat;
-  document.getElementById('mImg').src=src;
-  document.getElementById('mArchivo').textContent=nombre||file;
-  var dl=document.getElementById('mDescargar');
-  dl.href=src;
-  dl.download=file;
-  document.getElementById('modalFoto').classList.add('open');
-  document.body.style.overflow='hidden';
+// ── Lightbox Modal ──
+var modalIdx=-1;
+var modalCat='';
+var modalFotos=[];
+
+function getBaseKey(file){
+  var m=file.match(/^(DSC_\d{4,5}|DJI_\d{8}_\d{6}_\d{3})/);
+  return m?m[1]:null;
 }
 
-function cerrarModal(){document.getElementById('modalFoto').classList.remove('open');document.body.style.overflow='';}
+function abrirModal(cat,file){
+  modalCat=cat;
+  var data=ENTREGABLES[cat];
+  modalFotos=data&&data.fotos?data.fotos:[];
+  modalIdx=modalFotos.indexOf(file);
+  if(modalIdx<0)modalIdx=0;
+  document.getElementById('modalFoto').classList.add('open');
+  renderModal();
+}
 
-document.addEventListener('keydown',function(e){if(e.key==='Escape')cerrarModal();});
+function renderModal(){
+  if(modalIdx<0||modalIdx>=modalFotos.length)return;
+  var file=modalFotos[modalIdx];
+  var data=ENTREGABLES[modalCat];
+  var base=data.base||'';
+  var src=base.split('/').map(encodeURIComponent).join('/')+encodeURIComponent(file);
+  var bk=getBaseKey(file);
+  var nombre=(bk&&typeof NOMBRES!=='undefined'&&NOMBRES[bk])||'';
+
+  document.getElementById('mImg').src=src;
+  document.getElementById('mArchivo').textContent=(bk||file)+' — '+file;
+  document.getElementById('mNombreInput').value=nombre;
+  document.getElementById('mSaveBtn').className='m-save';
+  document.getElementById('mSaveBtn').textContent='Guardar';
+  document.getElementById('mCounter').textContent=(modalIdx+1)+' / '+modalFotos.length+' — '+modalCat;
+  var dl=document.getElementById('mDescargar');
+  dl.href=src;dl.download=file;
+}
+
+function navModal(dir){
+  var n=modalIdx+dir;
+  if(n<0)n=modalFotos.length-1;
+  if(n>=modalFotos.length)n=0;
+  modalIdx=n;
+  renderModal();
+}
+
+function guardarNombre(){
+  var file=modalFotos[modalIdx];
+  var bk=getBaseKey(file);
+  if(!bk)return;
+  var val=document.getElementById('mNombreInput').value.trim();
+  if(typeof NOMBRES==='undefined')window.NOMBRES={};
+  NOMBRES[bk]=val;
+  // Update grid card label if visible
+  var cards=document.querySelectorAll('.foto-card');
+  cards.forEach(function(c){
+    var img=c.querySelector('img');
+    if(img&&img.alt!==undefined){
+      var lbl=c.querySelector('.lbl');
+      if(lbl){
+        var cardFile=c.getAttribute('onclick')||'';
+        if(cardFile.indexOf(file.replace(/'/g,"\\'"))>-1){
+          lbl.textContent=val||file;
+          img.alt=val||file;
+        }
+      }
+    }
+  });
+  var btn=document.getElementById('mSaveBtn');
+  btn.className='m-save saved';
+  btn.textContent='Guardado';
+  setTimeout(function(){btn.className='m-save';btn.textContent='Guardar';},1500);
+}
+
+function cerrarModal(){document.getElementById('modalFoto').classList.remove('open');modalIdx=-1;}
+
+document.addEventListener('keydown',function(e){
+  var modal=document.getElementById('modalFoto');
+  if(!modal.classList.contains('open'))return;
+  if(e.key==='Escape')cerrarModal();
+  else if(e.key==='ArrowLeft'||e.key==='ArrowUp'){e.preventDefault();navModal(-1);}
+  else if(e.key==='ArrowRight'||e.key==='ArrowDown'){e.preventDefault();navModal(1);}
+});
 </script>
 </body>
 </html>
