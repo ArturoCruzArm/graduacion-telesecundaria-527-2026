@@ -487,7 +487,7 @@ var ENTREGABLES = {
       "DSC_0979seundaria 3c4x6.webp"
     ]
   },
-  "6x8": {
+  "Grupales": {
     "base": "img/secundaria 527/6x8/",
     "fotos": [
       "s5a.webp",
@@ -497,7 +497,7 @@ var ENTREGABLES = {
       "s5m.webp"
     ]
   },
-  "Pen Drive": {
+  "Personal Docente": {
     "base": "img/secundaria 527/pd/",
     "fotos": [
       "DJI_20260525_123127_636seundaria 3c4x6.webp"
