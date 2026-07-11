@@ -18,14 +18,6 @@ html,body{height:100%;overflow:hidden;}
 #pinGate .pin-err{color:#e74c3c;margin-top:10px;font-size:.85rem;min-height:20px;}
 .page-header{padding:8px 16px;}
 .page-header h1{font-size:clamp(.9rem,2.5vw,1.2rem);}
-.nav-bar{padding:4px 12px;gap:4px;}
-.nav-bar a{font-size:.75rem;padding:4px 10px;}
-.cat-tabs{display:flex;background:#fff;border-bottom:2px solid #e0e0e0;flex-shrink:0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:thin;}
-.cat-tabs::-webkit-scrollbar{height:3px;}
-.cat-tabs::-webkit-scrollbar-thumb{background:#ccc;border-radius:3px;}
-.cat-tab{padding:8px 18px;border:none;background:none;cursor:pointer;font-size:.82rem;font-weight:600;color:#888;white-space:nowrap;border-bottom:3px solid transparent;transition:all .2s;flex-shrink:0;}
-.cat-tab.active{color:var(--primary);border-bottom-color:var(--secondary);}
-.cat-tab .badge{display:inline-block;background:var(--secondary);color:var(--primary);font-size:.65rem;font-weight:800;padding:1px 6px;border-radius:10px;margin-left:4px;}
 .stats-row{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;}
 .stat-box{flex:1;min-width:80px;background:#fff;border-radius:8px;padding:6px 8px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.06);border-top:3px solid var(--secondary);}
 .stat-box .num{font-size:clamp(1rem,2.5vw,1.4rem);font-weight:800;color:var(--primary);}
@@ -69,7 +61,6 @@ footer{padding:6px 12px;font-size:.72rem;flex-shrink:0;}
   .foto-grid{grid-template-columns:repeat(auto-fill,minmax(85px,1fr));gap:4px;}
   .stat-box{min-width:60px;padding:4px 4px;}
   .stat-box .num{font-size:.9rem;}
-  .nav-bar a{font-size:.68rem;padding:3px 7px;}
   .foto-card .dl-btn{width:24px;height:24px;font-size:12px;}
 }
 </style>
@@ -84,17 +75,13 @@ footer{padding:6px 12px;font-size:.72rem;flex-shrink:0;}
 
 <div id="mainContent">
 
-
 <div class="page-header">
   <div><h1>&#127891; Graduacion</h1><p style="opacity:.7;font-size:.82rem;">Telesecundaria 527 &middot; 2026</p></div>
 </div>
 
-<div class="cat-tabs" id="catTabs"></div>
-
 <div class="content-area">
   <div class="stats-row">
     <div class="stat-box"><div class="num" id="st-fotos">0</div><div class="lbl">Fotos</div></div>
-    <div class="stat-box" style="border-top-color:#3498db;"><div class="num" id="st-cats" style="color:#3498db;">0</div><div class="lbl">Categorias</div></div>
   </div>
   <div class="pag-bar" id="pagBar"></div>
   <div class="galeria-scroll">
@@ -126,13 +113,12 @@ footer{padding:6px 12px;font-size:.72rem;flex-shrink:0;}
 
 <footer><p><strong>Producciones Foro 7</strong> &mdash; &#128241; 477-920-3776</p></footer>
 
-<script src="js/graduacion_data.js?v=1"></script>
+<script src="js/graduacion_data.js?v=2"></script>
 <script>
 var PIN='791';
 var PAGE_SIZE=60;
-var currentCat='';
 var currentPage=0;
-var currentFotos=[];
+var fotos=[];
 
 document.getElementById('pinInput').addEventListener('input',function(){
   if(this.value===PIN){
@@ -147,59 +133,34 @@ document.getElementById('pinInput').addEventListener('input',function(){
 
 function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 
-function getSrc(cat,f){
-  var data=GRADUACION[cat];
-  if(data.map&&data.map[f]){
-    return data.map[f].split('/').map(encodeURIComponent).join('/')+encodeURIComponent(f);
-  }
-  var base=data.base||'';
-  return base.split('/').map(encodeURIComponent).join('/')+encodeURIComponent(f);
-}
+function encPath(p){return p.split('/').map(encodeURIComponent).join('/');}
+
+function getThumb(f){return encPath(GRADUACION.thumbs[f]||GRADUACION.normals[f]);}
+function getNormal(f){return encPath(GRADUACION.normals[f]);}
 
 function init(){
   if(typeof GRADUACION==='undefined'){
     document.getElementById('fotoGrid').innerHTML='<p style="padding:20px;color:#888;">No hay fotos disponibles aun.</p>';
     return;
   }
-  var cats=Object.keys(GRADUACION);
-  document.getElementById('st-cats').textContent=cats.length;
-  renderTabs(cats);
-  if(cats.length>0) selectCat(cats[0]);
-}
-
-function renderTabs(cats){
-  var container=document.getElementById('catTabs');
-  container.innerHTML=cats.map(function(c){
-    var count=GRADUACION[c].fotos.length;
-    return '<button class="cat-tab" data-cat="'+esc(c)+'" onclick="selectCat(\''+esc(c).replace(/'/g,"\\'")+'\')">'
-      +esc(c)+'<span class="badge">'+count+'</span></button>';
-  }).join('');
-}
-
-function selectCat(cat){
-  currentCat=cat;
-  currentPage=0;
-  document.querySelectorAll('.cat-tab').forEach(function(b){
-    b.classList.toggle('active',b.dataset.cat===cat);
-  });
-  var data=GRADUACION[cat];
-  currentFotos=data&&data.fotos?data.fotos:[];
-  document.getElementById('st-fotos').textContent=currentFotos.length;
+  fotos=GRADUACION.fotos;
+  document.getElementById('st-fotos').textContent=fotos.length;
   renderGrid();
 }
 
 function renderGrid(){
   var grid=document.getElementById('fotoGrid');
-  var totalPages=Math.ceil(currentFotos.length/PAGE_SIZE);
+  var totalPages=Math.ceil(fotos.length/PAGE_SIZE);
   var start=currentPage*PAGE_SIZE;
-  var page=currentFotos.slice(start,start+PAGE_SIZE);
+  var page=fotos.slice(start,start+PAGE_SIZE);
 
   grid.innerHTML=page.map(function(f){
-    var src=getSrc(currentCat,f);
+    var thumb=getThumb(f);
+    var normal=getNormal(f);
     var name=f.replace(/\.\w+$/,'');
-    return '<div class="foto-card" onclick="abrirModal(\''+esc(currentCat).replace(/'/g,"\\'")+'\',\''+esc(f).replace(/'/g,"\\'")+'\')">'
-      +'<a class="dl-btn" href="'+src+'" download="'+esc(f)+'" onclick="event.stopPropagation()" title="Descargar">&#8681;</a>'
-      +'<img src="'+src+'" loading="lazy" alt="'+esc(name)+'">'
+    return '<div class="foto-card" onclick="abrirModal(\''+esc(f).replace(/'/g,"\\'")+'\')">'
+      +'<a class="dl-btn" href="'+normal+'" download="'+esc(f)+'" onclick="event.stopPropagation()" title="Descargar">&#8681;</a>'
+      +'<img src="'+thumb+'" loading="lazy" alt="'+esc(name)+'">'
       +'<div class="lbl">'+esc(name)+'</div>'
       +'</div>';
   }).join('');
@@ -209,7 +170,7 @@ function renderGrid(){
 
 function renderPag(totalPages){
   if(totalPages<=1){document.getElementById('pagBar').innerHTML='';document.getElementById('pagBar2').innerHTML='';return;}
-  var html='<span style="font-size:.8rem;color:#888;">'+currentFotos.length+' fotos</span> ';
+  var html='<span style="font-size:.8rem;color:#888;">'+fotos.length+' fotos</span> ';
   for(var i=0;i<totalPages;i++){
     html+='<button class="'+(i===currentPage?'active':'')+'" onclick="irPagina('+i+')">'+(i+1)+'</button>';
   }
@@ -220,34 +181,29 @@ function renderPag(totalPages){
 function irPagina(p){currentPage=p;renderGrid();var s=document.querySelector('.galeria-scroll');if(s)s.scrollTop=0;}
 
 var modalIdx=-1;
-var modalCat='';
-var modalFotos=[];
 
-function abrirModal(cat,file){
-  modalCat=cat;
-  var data=GRADUACION[cat];
-  modalFotos=data&&data.fotos?data.fotos:[];
-  modalIdx=modalFotos.indexOf(file);
+function abrirModal(file){
+  modalIdx=fotos.indexOf(file);
   if(modalIdx<0)modalIdx=0;
   document.getElementById('modalFoto').classList.add('open');
   renderModalG();
 }
 
 function renderModalG(){
-  if(modalIdx<0||modalIdx>=modalFotos.length)return;
-  var file=modalFotos[modalIdx];
-  var src=getSrc(modalCat,file);
+  if(modalIdx<0||modalIdx>=fotos.length)return;
+  var file=fotos[modalIdx];
+  var src=getNormal(file);
   document.getElementById('mImg').src=src;
   document.getElementById('mArchivo').textContent=file;
-  document.getElementById('mCounter').textContent=(modalIdx+1)+' / '+modalFotos.length+' \u2014 '+modalCat;
+  document.getElementById('mCounter').textContent=(modalIdx+1)+' / '+fotos.length;
   var dl=document.getElementById('mDescargar');
   dl.href=src;dl.download=file;
 }
 
 function navModal(dir){
   var n=modalIdx+dir;
-  if(n<0)n=modalFotos.length-1;
-  if(n>=modalFotos.length)n=0;
+  if(n<0)n=fotos.length-1;
+  if(n>=fotos.length)n=0;
   modalIdx=n;
   renderModalG();
 }
